@@ -209,6 +209,10 @@ while(count < 300){
   delay(1000);
   count++;
   }
+  if (count >= 300)
+  {
+    ONCE = 0;                             // reset ONCE
+  }
   count = 0;                            // reset count
 }
 

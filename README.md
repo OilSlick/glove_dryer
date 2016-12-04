@@ -14,6 +14,7 @@ This project uses an Arduino Uno to read relative humidity from two sensors; one
 **As of December 4, 2016 this project is still being developed.** While the Arduino sketch does provide full functionality, I am only currently testing with 1/2 of the solution; an exhaust fan inside the glove. The goal is to have another fan (per glove) that blows outside air into the glove so that there is a push/pull type action on air inside the glove. 
 
 ### To-Do
+* [ ] Switch FANCONTINUOUS to use millis instead of delay
 * [ ] Have fan-to-PVC pipe bracket printed 3D
 * [ ] Enable power-save for Arduino
 * [ ] Put LCD on PWM pin and power up/down as needed
