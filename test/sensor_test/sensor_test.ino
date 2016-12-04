@@ -63,7 +63,7 @@ void loop()
   Serial.print("\t Maximum RA: ");
   Serial.print(myRA.getMax(), 3);
   Serial.print("\t Cycle Count: ");
-  Serial.print(cycle);
+  Serial.println(cycle);
 
   if (samples == 300)
   {
