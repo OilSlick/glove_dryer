@@ -134,22 +134,22 @@ void loop()
      LOWREADING=humidityGLOVE;
   }
 
-  //Trigger events based on humidity level
-  if (humidityGLOVE >= 85)
+  //Trigger events based on difference in humidity levels
+  if (humidityGLOVE >= (humidityOUTcalibrated + 3) && samples > 1)  //If gloves are 3+% more humid, commence drying
   {
    Serial.print("Glove Humidity: ");
    Serial.print(humidityGLOVE);
    Serial.println("%\r\n");
    Serial.println("Fan on");
-   analogWrite(TIP120pin, 255);          // By changing values from 0 to 255 you can control motor speed
+   analogWrite(TIP120pin, 255);          // Turn fan on "full" (255 = full)
    if ( FANPREV != 1 && DRYMODE != 1)
    {
-     startTime = millis();               //Store the fan start time once per drying cycle (per high RH)
+     startTime = millis();               //Store the fan start time once per drying cycle
    }
-   FANPREV = 1;                          //Record that fan has run (used in LCD_DISPLAY()
+   FANPREV = 1;                          //Record that fan has run (used in LCD_DISPLAY())
    DRYMODE=1;                            //Signify drymode; fan should be running
    }
-   else if (humidityGLOVE <= 80)
+   else 
    {
     int humidityDIFF = TH02.ReadHumidity() - dht.getHumidity();
     myRA.addValue(humidityDIFF);
