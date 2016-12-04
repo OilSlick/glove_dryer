@@ -11,6 +11,7 @@ RunningAverage myRA(10);
 int samples = 0;
 int humidity = 0;
 int cycle = 0;
+float previousRA = 0;
 
 DHT dht;
 
@@ -63,15 +64,19 @@ void loop()
   Serial.print("\t Maximum RA: ");
   Serial.print(myRA.getMax(), 3);
   Serial.print("\t Cycle Count: ");
-  Serial.println(cycle);
+  Serial.print(cycle);
+
+  Serial.print("\t Previous RA: ");
+  Serial.println(previousRA);
 
   if (samples == 300)
   {
+    previousRA=myRA.getAverage();
     cycle++;
     samples = 0;
     myRA.clear();
     Serial.print("Cycles: ");
-    Serial.println(cycle);
+    Serial.print(cycle);
   }
   delay(10);
 
