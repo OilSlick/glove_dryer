@@ -197,13 +197,19 @@ while(count < 300){
         LCD_DISPLAY();
       }
   analogWrite(TIP120pin, 255);
-  Serial.print("Humidity: ");
+  Serial.print("Glove Humidity: ");
   Serial.print(humidityGLOVE);
-  Serial.println("%\r\n");
+  Serial.print("%");
+  Serial.print("\t Room Humidity: ");
+  Serial.print(humidityOUTcalibrated);
+  Serial.print("%");
+  Serial.print("\t Diff RA: ");
+  Serial.println(myRA.getAverage(), 3);
   Serial.println("Fan on CONTINUOUS");
   delay(1000);
   count++;
   }
+  count = 0;                            // reset count
 }
 
 void LCD_DISPLAY()
@@ -218,7 +224,6 @@ void LCD_DISPLAY()
     }
     display.print(humidityGLOVE);
     display.setTextColor(WHITE);
-    display.setCursor(80,0);
     display.print("%");
     display.setCursor(0,20);
     display.print("Mode:");
@@ -237,7 +242,7 @@ void LCD_DISPLAY()
       display.setCursor(50,20);
       display.print("MONITOR");
     }
-    delay(1500);
+    delay(2000);
     display.fillScreen(BLACK);
     display.setCursor(0,0);
     display.print("High:");
