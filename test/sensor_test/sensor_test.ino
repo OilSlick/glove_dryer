@@ -40,14 +40,14 @@ void loop()
   delay(dht.getMinimumSamplingPeriod());
 
   int humidityDHT = dht.getHumidity();
-  int humidityTOP = TH02.ReadHumidity();
-  int humidityDIFF = humidityTOP - humidityDHT;
+  int humidityGLOVE = TH02.ReadHumidity();
+  int humidityDIFF = humidityGLOVE - humidityDHT;
   
   Serial.print("DHT humdity = ");
   Serial.print(humidityDHT);
 
   Serial.print("\t Top Humidity: ");
-  Serial.print(humidityTOP);
+  Serial.print(humidityGLOVE);
 
   Serial.print("\t Difference: ");
   Serial.print(humidityDIFF);
