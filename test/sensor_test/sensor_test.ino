@@ -4,12 +4,13 @@
 // https://github.com/RobTillaart/Arduino/tree/master/libraries/RunningAverage
 
 #include "DHT.h"
-#include <TH02_dev.h>
+#include "TH02_dev.h"
 #include "RunningAverage.h"
 
 RunningAverage myRA(10);
 int samples = 0;
 int humidity = 0;
+int cycle = 0;
 
 DHT dht;
 
@@ -57,16 +58,20 @@ void loop()
   Serial.print("\t Samples: ");
   Serial.println(samples);
 
-  Serial.print("Minimum: ");
+  Serial.print("Minimum RA: ");
   Serial.print(myRA.getMin(), 3);
-  Serial.print("\t Maximum: ");
-  Serial.println(myRA.getMax(), 3);
+  Serial.print("\t Maximum RA: ");
+  Serial.print(myRA.getMax(), 3);
+  Serial.print("\t Cycle Count: ");
+  Serial.print(cycle);
 
   if (samples == 300)
   {
+    cycle++;
     samples = 0;
     myRA.clear();
-    Serial.println();
+    Serial.print("Cycles: ");
+    Serial.println(cycle);
   }
   delay(10);
 
