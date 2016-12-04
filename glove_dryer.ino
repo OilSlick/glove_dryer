@@ -3,13 +3,20 @@
 #include "Arduino.h"
 #include "Wire.h"
 #include "DHT.h" 
+#include "RunningAverage.h"
 
-const int TIP120pin = 5;    //base pin of TIP120 transistor
-const int ButtonPWR = 6;    //provide 5v to button circuit
-const int inPin = 7;        //read button circuit status
-int BUTTONVAL = 0;          //store button circuit status as value
-int DRYMODE=0;              //determine monitor or dry mode (fan on or off)
-int ONCE=0;                 //ensure FANCONTINUOUS() only runs once per drying cycle (per high humidity)
+//Running average vars
+RunningAverage myRA(10);
+int samples = 0;            //Count number of samples taken
+int cycle = 0;              //Count number of cycles between RA resets
+float previousRA = 0;       //Track previous running average (RA)
+
+const int TIP120pin = 5;    //Base pin of TIP120 transistor
+const int ButtonPWR = 6;    //Provide 5v to button circuit
+const int inPin = 7;        //Read button circuit status
+int BUTTONVAL = 0;          //Store button circuit status as value
+int DRYMODE=0;              //Determine monitor or dry mode (fan on or off)
+int ONCE=0;                 //Ensure FANCONTINUOUS() only runs once per drying cycle (per high humidity)
 float LOWREADING=200;       //Track historical low RH
 float HIGHREADING=0;        //Track historical high RH
 long startTime ;            //Track fan runtime
@@ -73,6 +80,8 @@ void setup()
   display.print("Glove Dryer V.1");
   delay(1000);
   display.fillScreen(BLACK);
+
+  myRA.clear(); // explicitly start RA clean
 }
  
 void loop()
@@ -89,6 +98,20 @@ void loop()
   
   float humidityGLOVE = TH02.ReadHumidity();
   int humidityOUT = dht.getHumidity();
+  int humidityDIFF = humidityGLOVE - humidityOUT;
+  myRA.addValue(humidityDIFF);
+  samples++;
+
+  if (samples == 300)                    //To preserve memory, only run for X samples
+  {
+    previousRA=myRA.getAverage();       //Store previous RA
+    cycle++;
+    samples = 0;
+    myRA.clear();
+    Serial.print("Cycles: ");
+    Serial.print(cycle);
+  }
+  delay(10);
 
   //Track historical high and low readings
    
@@ -121,9 +144,11 @@ void loop()
     Serial.print("Glove Humidity: ");
     Serial.print(humidityGLOVE);
     Serial.print("%");
-    Serial.print("\tRoom Humidity: ");
+    Serial.print("\t Room Humidity: ");
     Serial.print(humidityOUT);
-    Serial.println("%\r\n");
+    Serial.print("%");
+    Serial.print("\t Diff RA: ");
+    Serial.println(myRA.getAverage(), 3);
     Serial.println("Fan off");
     while(ONCE < 1 && DRYMODE == 1 )
     {
