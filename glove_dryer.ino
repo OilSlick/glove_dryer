@@ -1,7 +1,8 @@
 
-#include <TH02_dev.h>
+#include "TH02_dev.h"
 #include "Arduino.h"
-#include "Wire.h" 
+#include "Wire.h"
+#include "DHT.h" 
 
 const int TIP120pin = 5;    //base pin of TIP120 transistor
 const int ButtonPWR = 6;    //provide 5v to button circuit
@@ -14,6 +15,8 @@ float HIGHREADING=0;        //Track historical high RH
 long startTime ;            //Track fan runtime
 long elapsedTime ;          //Track fan runtime
 int FANPREV = 0;            //Store if fan has ever run
+
+DHT dht;
   
 //LCD requirements:
 
@@ -41,6 +44,9 @@ Adafruit_SSD1331 display = Adafruit_SSD1331(cs, dc, mosi, sclk, rst);
 
 void setup()
 {  
+  //DHT sensor setup
+  dht.setup(A0);
+  
   //Button setup
   pinMode(inPin, INPUT);          // declare pushbutton as input
   pinMode(ButtonPWR,OUTPUT);      //provide power to button
@@ -55,8 +61,7 @@ void setup()
   TH02.begin();
   delay(100);
   
-  /* Determine TH02_dev is available or not */
-  Serial.println("TH02_dev is available.\n"); 
+  Serial.println("Ready"); 
 
   //TIP120 Transistor base pin as OUTPUT
   pinMode(TIP120pin, OUTPUT);
@@ -75,43 +80,49 @@ void loop()
   //Button to activate LCD display
   digitalWrite(ButtonPWR, HIGH);
   BUTTONVAL = digitalRead(inPin);       // read button input value
-  if (BUTTONVAL == LOW)
+  if (BUTTONVAL == LOW)                 // if button has been pushed
   {
   LCD_DISPLAY();
   }
   
-   float humidity = TH02.ReadHumidity();
+  delay(dht.getMinimumSamplingPeriod()); //play nice with DHT sensor
+  
+  float humidityGLOVE = TH02.ReadHumidity();
+  int humidityOUT = dht.getHumidity();
 
-   //Track historical high and low readings
+  //Track historical high and low readings
    
-    if (humidity > HIGHREADING)
-    {
-      HIGHREADING=humidity;
-    }
-    if (humidity < LOWREADING)
-    {
-      LOWREADING=humidity;
-    }
+  if (humidityGLOVE > HIGHREADING)
+  {
+    HIGHREADING=humidityGLOVE;
+  }
+  if (humidityGLOVE < LOWREADING)
+  {
+     LOWREADING=humidityGLOVE;
+  }
 
   //Trigger events based on humidity level
-   if (humidity >= 85)
+  if (humidityGLOVE >= 85)
+  {
+   Serial.print("Glove Humidity: ");
+   Serial.print(humidityGLOVE);
+   Serial.println("%\r\n");
+   Serial.println("Fan on");
+   analogWrite(TIP120pin, 255);          // By changing values from 0 to 255 you can control motor speed
+   if ( FANPREV != 1 && DRYMODE != 1)
    {
-    Serial.print("Humidity: ");
-    Serial.print(humidity);
-    Serial.println("%\r\n");
-    Serial.println("Fan on");
-    analogWrite(TIP120pin, 255);          // By changing values from 0 to 255 you can control motor speed
-    if ( FANPREV != 1 && DRYMODE != 1)
-    {
-      startTime = millis();               //Store the fan start time once per drying cycle (per high RH)
-    }
-    FANPREV = 1;                          //Record that fan has run (used in LCD_DISPLAY()
-    DRYMODE=1;                            //Signify drymode; fan should be running
+     startTime = millis();               //Store the fan start time once per drying cycle (per high RH)
    }
-   else if (humidity <= 80)
+   FANPREV = 1;                          //Record that fan has run (used in LCD_DISPLAY()
+   DRYMODE=1;                            //Signify drymode; fan should be running
+   }
+   else if (humidityGLOVE <= 80)
    {
-    Serial.print("Humidity: ");
-    Serial.print(humidity);
+    Serial.print("Glove Humidity: ");
+    Serial.print(humidityGLOVE);
+    Serial.print("%");
+    Serial.print("\tRoom Humidity: ");
+    Serial.print(humidityOUT);
     Serial.println("%\r\n");
     Serial.println("Fan off");
     while(ONCE < 1 && DRYMODE == 1 )
@@ -130,16 +141,16 @@ void loop()
 void FANCONTINUOUS()
 {
 int count=0;
-float humidity = TH02.ReadHumidity();
+float humidityGLOVE = TH02.ReadHumidity();
   
 while(count < 300){
-    if (BUTTONVAL == LOW)
+    if (BUTTONVAL == LOW)               // if button has been pushed
       {
         LCD_DISPLAY();
       }
   analogWrite(TIP120pin, 255);
   Serial.print("Humidity: ");
-  Serial.print(humidity);
+  Serial.print(humidityGLOVE);
   Serial.println("%\r\n");
   Serial.println("Fan on CONTINUOUS");
   delay(1000);
@@ -149,15 +160,15 @@ while(count < 300){
 
 void LCD_DISPLAY()
 {
-    float humidity = TH02.ReadHumidity();
+    float humidityGLOVE = TH02.ReadHumidity();
     display.setCursor(0,0);
     display.print("Humid:");
     display.setCursor(50,0);
-    if (humidity >= 85)
+    if (humidityGLOVE >= 85)
     {
       display.setTextColor(RED); 
     }
-    display.print(humidity);
+    display.print(humidityGLOVE);
     display.setTextColor(WHITE);
     display.setCursor(80,0);
     display.print("%");
