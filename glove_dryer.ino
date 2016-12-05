@@ -18,7 +18,6 @@ const int ButtonPWR = 6;      //Provide 5v to button circuit
 const int inPin = 7;          //Read button circuit status
 int BUTTONVAL = 0;            //Store button circuit status as value
 int DRYMODE=0;                //Determine monitor or dry mode (fan on or off)
-int ONCE=0;                   //Ensure FANCONTINUOUS() only runs once per drying cycle (per high humidity)
 int LOWREADING=200;           //Track historical low RH
 int HIGHREADING=0;            //Track historical high RH
 long startTime ;              //Track fan runtime
@@ -70,7 +69,7 @@ void setup()
   TH02.begin();
   delay(100);
   
-  Serial.println("Ready"); 
+  Serial.println("TH02 Ready"); 
 
   //TIP120 Transistor base pin as OUTPUT
   pinMode(TIP120pin, OUTPUT);
@@ -99,6 +98,7 @@ void loop()
   delay(dht.getMinimumSamplingPeriod()); //play nice with DHT sensor
   
   int humidityGLOVE = TH02.ReadHumidity();
+  int humidityOUT = dht.getHumidity();
   USECALIBRATEDHUMI();
   
   //Track historical high and low readings for display on LCD
@@ -124,8 +124,11 @@ void loop()
    {
      startTime = millis();               //Store the fan start time once per drying cycle
    }
-   FANPREV = 1;                          //Record that fan has run (used in LCD_DISPLAY())
-   DRYMODE=1;                            //Signify drymode; fan should be running
+   while (millis() - startTime < (5*60*1000))  //Run fan for 5 minutes
+   {
+    FANPREV = 1;                          //Record that fan has run (used in LCD_DISPLAY())
+    DRYMODE=1;                            //Signify drymode; fan should be running
+   }
    }
    else 
    {
@@ -151,11 +154,6 @@ void loop()
     Serial.print("\t Diff RA: ");
     Serial.println(myRA.getAverage(), 3);
     Serial.println("Fan off");
-    while(ONCE < 1 && DRYMODE == 1 )
-    {
-      ONCE++;
-      FANCONTINUOUS();
-    }
     analogWrite(TIP120pin, 0); // Fan off
     DRYMODE=0;
    }
@@ -163,37 +161,6 @@ void loop()
 } 
 
 //FUNCTIONS
-
-void FANCONTINUOUS()
-{
-int count=0;
-int humidityGLOVE = TH02.ReadHumidity();
-USECALIBRATEDHUMI();
-  
-while(count < 300){
-    if (BUTTONVAL == LOW)               // if button has been pushed
-      {
-        LCD_DISPLAY();
-      }
-  analogWrite(TIP120pin, 255);
-  Serial.print("Glove Humidity: ");
-  Serial.print(humidityGLOVE);
-  Serial.print("%");
-  Serial.print("\t Room Humidity: ");
-  Serial.print(humidityOUTcalibrated);
-  Serial.print("%");
-  Serial.print("\t Diff RA: ");
-  Serial.println(myRA.getAverage(), 3);
-  Serial.println("Fan on CONTINUOUS");
-  delay(1000);
-  count++;
-  }
-  if (count >= 300)
-  {
-    ONCE = 0;                             // reset ONCE
-  }
-  count = 0;                            // reset count
-}
 
 void LCD_DISPLAY()
 {
