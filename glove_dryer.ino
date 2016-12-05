@@ -7,22 +7,23 @@
 
 //Running average vars
 RunningAverage myRA(10);
-int samples = 0;            //Count number of samples taken
-int cycle = 0;              //Count number of cycles between RA resets
-float previousRA = 0;       //Track previous running average (RA)
-int humidityOUTcalibrated = 0; //Calibrated DHT value
+int samples = 0;                //Count number of samples taken
+int cycle = 0;                  //Count number of cycles between RA resets
+float previousRA = 0;           //Track previous running average (RA)
+int humidityOUTcalibrated = 0;  //Calibrated DHT value
+int humidityOUT = 0;            //Humidity outside of glove
 
-const int TIP120pin = 5;    //Base pin of TIP120 transistor
-const int ButtonPWR = 6;    //Provide 5v to button circuit
-const int inPin = 7;        //Read button circuit status
-int BUTTONVAL = 0;          //Store button circuit status as value
-int DRYMODE=0;              //Determine monitor or dry mode (fan on or off)
-int ONCE=0;                 //Ensure FANCONTINUOUS() only runs once per drying cycle (per high humidity)
-int LOWREADING=200;       //Track historical low RH
-int HIGHREADING=0;        //Track historical high RH
-long startTime ;            //Track fan runtime
-long elapsedTime ;          //Track fan runtime
-int FANPREV = 0;            //Store if fan has ever run
+const int TIP120pin = 5;      //Base pin of TIP120 transistor
+const int ButtonPWR = 6;      //Provide 5v to button circuit
+const int inPin = 7;          //Read button circuit status
+int BUTTONVAL = 0;            //Store button circuit status as value
+int DRYMODE=0;                //Determine monitor or dry mode (fan on or off)
+int ONCE=0;                   //Ensure FANCONTINUOUS() only runs once per drying cycle (per high humidity)
+int LOWREADING=200;           //Track historical low RH
+int HIGHREADING=0;            //Track historical high RH
+long startTime ;              //Track fan runtime
+long elapsedTime ;            //Track fan runtime
+int FANPREV = 0;              //Store if fan has ever run
 
 DHT dht;
   
@@ -98,32 +99,9 @@ void loop()
   delay(dht.getMinimumSamplingPeriod()); //play nice with DHT sensor
   
   int humidityGLOVE = TH02.ReadHumidity();
-  int humidityOUT = dht.getHumidity();
-
-  //Calibrate DHT sensor (humidityOUT)
-  if (cycle < 1)                        //on first RA cycle, use current running average
-  {
-   humidityOUTcalibrated = humidityOUT + myRA.getAverage();
-   Serial.print("Calibrated DHT: ");
-   Serial.print(humidityOUTcalibrated);
-   Serial.println("%");
-  }
-  else if (cycle >= 1 && samples <= 149) //Assuming before 150 RA samples, previous RA is more accurate
-  {
-   humidityOUTcalibrated = humidityOUT + previousRA;
-   Serial.print("Calibrated DHT: ");
-   Serial.print(humidityOUTcalibrated);
-   Serial.println("%");
-  }
-  else                                   //With 150+ RA samples, use current RA
-  {
-   humidityOUTcalibrated = humidityOUT + myRA.getAverage();
-   Serial.print("Calibrated DHT: ");
-   Serial.print(humidityOUTcalibrated);
-   Serial.println("%"); 
-  }
+  USECALIBRATEDHUMI();
   
-  //Track historical high and low readings
+  //Track historical high and low readings for display on LCD
    
   if (humidityGLOVE > HIGHREADING)
   {
@@ -151,13 +129,13 @@ void loop()
    }
    else 
    {
-    int humidityDIFF = TH02.ReadHumidity() - dht.getHumidity();
-    myRA.addValue(humidityDIFF);
+    int humidityDIFF = TH02.ReadHumidity() - humidityOUT;
+    myRA.addValue(humidityDIFF);        //Add diff to running average (actively calibrate)
     samples++;
 
-    if (samples == 300)                    //To preserve memory, only run for X samples
+    if (samples == 300)                 //To preserve memory, only run for X samples
     {
-      previousRA=myRA.getAverage();       //Store previous RA
+      previousRA=myRA.getAverage();     //Store previous RA
       cycle++;
       samples = 0;
       myRA.clear();
@@ -190,6 +168,7 @@ void FANCONTINUOUS()
 {
 int count=0;
 int humidityGLOVE = TH02.ReadHumidity();
+USECALIBRATEDHUMI();
   
 while(count < 300){
     if (BUTTONVAL == LOW)               // if button has been pushed
@@ -280,3 +259,31 @@ void LCD_DISPLAY()
     delay(1500);
     display.fillScreen(BLACK);
 }
+
+void USECALIBRATEDHUMI()
+{
+  int humidityOUT = dht.getHumidity();
+  
+  if (cycle < 1)                        //on first RA cycle, use current running average
+  {
+   humidityOUTcalibrated = humidityOUT + myRA.getAverage();
+   Serial.print("Calibrated DHT: ");
+   Serial.print(humidityOUTcalibrated);
+   Serial.println("%");
+  }
+  else if (cycle >= 1 && samples <= 149) //Assuming before 150 RA samples, previous RA is more accurate
+  {
+   humidityOUTcalibrated = humidityOUT + previousRA;
+   Serial.print("Calibrated DHT: ");
+   Serial.print(humidityOUTcalibrated);
+   Serial.println("%");
+  }
+  else                                   //With 150+ RA samples, use current RA
+  {
+   humidityOUTcalibrated = humidityOUT + myRA.getAverage();
+   Serial.print("Calibrated DHT: ");
+   Serial.print(humidityOUTcalibrated);
+   Serial.println("%"); 
+  }
+}
+
