@@ -13,16 +13,16 @@ float previousRA = 0;           //Track previous running average (RA)
 int humidityOUTcalibrated = 0;  //Calibrated DHT value
 int humidityOUT = 0;            //Humidity outside of glove
 
-const int TIP120pin = 5;      //Base pin of TIP120 transistor
-const int ButtonPWR = 6;      //Provide 5v to button circuit
-const int inPin = 7;          //Read button circuit status
-int BUTTONVAL = 0;            //Store button circuit status as value
-int DRYMODE=0;                //Determine monitor or dry mode (fan on or off)
-int LOWREADING=200;           //Track historical low RH
-int HIGHREADING=0;            //Track historical high RH
-long startTime ;              //Track fan runtime
-long elapsedTime ;            //Track fan runtime
-int FANPREV = 0;              //Store if fan has ever run
+const int TIP120pin = 5;        //Base pin of TIP120 transistor
+const int ButtonPWR = 6;        //Provide 5v to button circuit
+const int inPin = 7;            //Read button circuit status
+int BUTTONVAL = 0;              //Store button circuit status as value
+int DRYMODE=0;                  //Determine monitor or dry mode (fan on or off)
+int LOWREADING=200;             //Track historical low RH
+int HIGHREADING=0;              //Track historical high RH
+long startTime ;                //Track fan runtime
+long elapsedTime ;              //Track fan runtime
+int FANPREV = 0;                //Store if fan has ever run
 
 DHT dht;
   
@@ -113,7 +113,7 @@ void loop()
   }
 
   //Trigger events based on difference in humidity levels
-  if (humidityGLOVE >= (humidityOUTcalibrated + 3) && samples > 1)  //If gloves are 3+% more humid, commence drying
+  if (humidityGLOVE >= 80)  
   {
    Serial.print("Glove Humidity: ");
    Serial.print(humidityGLOVE);
@@ -123,12 +123,7 @@ void loop()
    if ( FANPREV != 1 && DRYMODE != 1)
    {
      startTime = millis();               //Store the fan start time once per drying cycle
-   }
-   while (millis() - startTime < (5*60*1000))  //Run fan for 5 minutes
-   {
-    FANPREV = 1;                          //Record that fan has run (used in LCD_DISPLAY())
-    DRYMODE=1;                            //Signify drymode; fan should be running
-   }
+   }   
    }
    else 
    {
