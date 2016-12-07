@@ -18,6 +18,7 @@ This project uses an Arduino Uno to read relative humidity from two sensors; one
 * [ ] Have fan-to-PVC pipe bracket printed 3D
 * [ ] Enable power-save for Arduino
 * [ ] Put LCD on PWM pin and power up/down as needed
+ * [ ] Utilize IfSerial
 * [ ] Power Arduino with [PowerBoost 1000 Charger](https://www.adafruit.com/products/2465) (currently on AAA's)
  * [ ] Recharge Arduino from wall wart used to power fans
 * [ ] Have Arduino case and pipe-supports printed 3D
