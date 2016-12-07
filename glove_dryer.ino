@@ -1,7 +1,7 @@
 
 #include "TH02_dev.h"
-#include "Arduino.h"
-#include "Wire.h"
+// #include "Arduino.h"
+// #include "Wire.h"
 #include "DHT.h" 
 #include "RunningAverage.h"
 
