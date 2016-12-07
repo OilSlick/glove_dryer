@@ -11,7 +11,7 @@ int samples = 0;                //Count number of samples taken
 int cycle = 0;                  //Count number of cycles between RA resets
 float previousRA = 0;           //Track previous running average (RA)
 int humidityOUT = 0;            //Humidity outside of glove
-int humidityOUTcalibrated = 0;  //Calibrated DHT value
+int humidityOUTcorrelated = 0;  //Correlated DHT value
 int humidityGLOVE = 0;          //Humidity inside of glove
 int humidityDIFF = 0;           //Difference betwee TH02 and DHT11 sensors
 
@@ -105,7 +105,7 @@ void setup()
   Serial.print("\t Diff: ");
   Serial.println(humidityDIFF);
 
-  myRA.addValue(humidityDIFF);        //Add diff to running average (actively calibrate)
+  myRA.addValue(humidityDIFF);        //Add diff to running average
   samples++;
 
   delay(1000);
@@ -125,6 +125,8 @@ void loop()
   humidityGLOVE = TH02.ReadHumidity();
   humidityOUT = dht.getHumidity();
   humidityDIFF = TH02.ReadHumidity() - humidityOUT;
+  humidityOUTcorrelated = humidityOUT + myRA.getAverage();
+  
   //Track historical high and low readings for display on LCD
    
   if (humidityGLOVE > HIGHREADING)
@@ -137,24 +139,24 @@ void loop()
   }
 
   //Trigger events based on difference in humidity levels
-  if (humidityGLOVE >= 85)  
+  if (humidityGLOVE >= (humidityOUTcorrelated + 3))  
   {
-   DISPLAYSERIAL();
-   Serial.println("Fan on");
-   analogWrite(TIP120pin, 255);          // Turn fan on "full" (255 = full)
-   if ( FANPREV != 1 && DRYMODE != 1)
-   {
-     startTime = millis();               //Store the fan start time once per drying cycle
-   }   
-   }
-   else 
-   {
     DISPLAYSERIAL();
-    Serial.println("Fan off");
-    analogWrite(TIP120pin, 0); // Fan off
-    DRYMODE=0;
-   }
-      delay(1000);
+    Serial.println("Fan on");
+    analogWrite(TIP120pin, 255);          // Turn fan on "full" (255 = full)
+    if ( FANPREV != 1 && DRYMODE != 1)
+    {
+      startTime = millis();               //Store the fan start time once per drying cycle
+    }   
+  }
+  else 
+  {
+  DISPLAYSERIAL();
+  Serial.println("Fan off");
+  analogWrite(TIP120pin, 0); // Fan off
+  DRYMODE=0;
+  }
+  delay(1000);
 } 
 
 //FUNCTIONS
@@ -220,41 +222,21 @@ void LCD_DISPLAY()
     display.fillScreen(BLACK);
 }
 
-void USECALIBRATEDHUMI()
-{
-  int humidityOUT = dht.getHumidity();
-  
-  if (cycle < 1)                        //on first RA cycle, use current running average
-  {
-   humidityOUTcalibrated = humidityOUT + myRA.getAverage();
-   Serial.print("Calibrated DHT: ");
-   Serial.print(humidityOUTcalibrated);
-   Serial.println("%");
-  }
-  else if (cycle >= 1 && samples <= 149) //Assuming before 150 RA samples, previous RA is more accurate
-  {
-   humidityOUTcalibrated = humidityOUT + previousRA;
-   Serial.print("Calibrated DHT: ");
-   Serial.print(humidityOUTcalibrated);
-   Serial.println("%");
-  }
-  else                                   //With 150+ RA samples, use current RA
-  {
-   humidityOUTcalibrated = humidityOUT + myRA.getAverage();
-   Serial.print("Calibrated DHT: ");
-   Serial.print(humidityOUTcalibrated);
-   Serial.println("%"); 
-  }
-}
 void DISPLAYSERIAL()
 {
   Serial.print("Glove Humidity: ");
   Serial.print(humidityGLOVE);
   Serial.print("%");
-  Serial.print("\t Room Humidity: ");
+  Serial.print("\t Raw Room Humidity: ");
   Serial.print(humidityOUT);
   Serial.print("%");
+  Serial.print("\t Correlated Room Humidity: ");
+  Serial.print(humidityOUTcorrelated);
   Serial.print("\t Diff RA: ");
-  Serial.println(myRA.getAverage(), 3);
+  Serial.print(myRA.getAverage(), 3);
+  Serial.print("\t High: ");
+  Serial.print(HIGHREADING);
+  Serial.print("\t Low: ");
+  Serial.println(LOWREADING);
 }
 
