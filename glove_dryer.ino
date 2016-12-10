@@ -1,7 +1,7 @@
 
 #include "TH02_dev.h"
-// #include "Arduino.h"
-// #include "Wire.h"
+// #include "Arduino.h" //(I don't remember why I include this)
+// #include "Wire.h" //Permits I2C comms but TH02_dev.h includes functionality
 #include "DHT.h" 
 #include "RunningAverage.h"
 
@@ -60,8 +60,8 @@ void setup()
   dht.setup(A0);
   
   //Button setup
-  pinMode(inPin, INPUT);          // declare pushbutton as input
-  pinMode(ButtonPWR,OUTPUT);      //provide power to button
+  //pinMode(inPin, INPUT);          // declare pushbutton as input
+  //pinMode(ButtonPWR,OUTPUT);      //provide power to button
   
   Serial.begin(9600);             // start serial for output
 
@@ -79,12 +79,12 @@ void setup()
   pinMode(TIP120pin, OUTPUT);
 
   //LCD Display requirements
-  display.begin();
-  display.fillScreen(BLACK);
-  display.setCursor(0,0);
-  display.print("Glove Dryer V.1");
-  delay(1000);
-  display.fillScreen(BLACK);
+  //display.begin();
+  //display.fillScreen(BLACK);
+  //display.setCursor(0,0);
+  //display.print("Glove Dryer V.1");
+  //delay(1000);
+  //display.fillScreen(BLACK);
 
   myRA.clear(); // explicitly start RA clean
   delay(dht.getMinimumSamplingPeriod()); //play nice with DHT sensor
@@ -139,7 +139,7 @@ void loop()
   }
 
   //Trigger events based on difference in humidity levels
-  if (humidityGLOVE >= (humidityOUTcorrelated + 3))  
+  if (humidityGLOVE >= (humidityOUTcorrelated + 4))  
   {
     DISPLAYSERIAL();
     Serial.println("Fan on");
