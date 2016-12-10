@@ -30,29 +30,7 @@ int FANPREV = 0;                //Store if fan has ever run
 
 DHT dht;
   
-//LCD requirements:
-
-// Pin assignments for LCD display
-#define sclk 13
-#define mosi 11
-#define cs   10
-#define rst  9
-#define dc   8
-
-// Color definitions for LCD display
-#define BLACK           0x0000
-#define BLUE            0x001F
-#define RED             0xF800
-#define CYAN            0x07FF
-#define MAGENTA         0xF81F
-#define YELLOW          0xFFE0
-#define WHITE           0xFFFF
-
-#include <Adafruit_GFX.h>
-#include <Adafruit_SSD1331.h>
 #include <SPI.h>
-
-Adafruit_SSD1331 display = Adafruit_SSD1331(cs, dc, mosi, sclk, rst);  
 
 void setup()
 {  
@@ -77,14 +55,6 @@ void setup()
 
   //TIP120 Transistor base pin as OUTPUT
   pinMode(TIP120pin, OUTPUT);
-
-  //LCD Display requirements
-  //display.begin();
-  //display.fillScreen(BLACK);
-  //display.setCursor(0,0);
-  //display.print("Glove Dryer V.1");
-  //delay(1000);
-  //display.fillScreen(BLACK);
 
   myRA.clear(); // explicitly start RA clean
   delay(dht.getMinimumSamplingPeriod()); //play nice with DHT sensor
@@ -114,14 +84,6 @@ void setup()
  
 void loop()
 { 
-  //Button to activate LCD display
-  digitalWrite(ButtonPWR, HIGH);
-  BUTTONVAL = digitalRead(inPin);       // read button input value
-  if (BUTTONVAL == LOW)                 // if button has been pushed
-  {
-  LCD_DISPLAY();
-  }
-
   humidityGLOVE = TH02.ReadHumidity();
   humidityOUT = dht.getHumidity();
   humidityDIFF = TH02.ReadHumidity() - humidityOUT;
@@ -160,67 +122,6 @@ void loop()
 } 
 
 //FUNCTIONS
-
-void LCD_DISPLAY()
-{
-    int humidityGLOVE = TH02.ReadHumidity();
-    display.setCursor(0,0);
-    display.print("Humid:");
-    display.setCursor(50,0);
-    if (humidityGLOVE >= 85)
-    {
-      display.setTextColor(RED); 
-    }
-    display.print(humidityGLOVE);
-    display.setTextColor(WHITE);
-    display.print("%");
-    display.setCursor(0,20);
-    display.print("Mode:");
-    if (DRYMODE == 1)
-    {
-      display.setCursor(50,20);
-      display.print("DRY");
-    }
-
-    else if (DRYMODE != 1)
-    {
-      display.setCursor(50,20);
-      display.print("MONITOR");
-    }
-    delay(2000);
-    display.fillScreen(BLACK);
-    display.setCursor(0,0);
-    display.print("High:");
-    display.setCursor(50,0);
-    display.print(HIGHREADING);
-    display.print("%");
-    display.setCursor(0,20);
-    display.print("Low:");
-    display.setCursor(50,20);
-    display.print(LOWREADING);
-    display.print("%");
-    if (FANPREV == 1)
-    {
-      display.setCursor(0,40);
-      display.print("Time:");
-      display.setCursor(50,40);
-      elapsedTime = millis() - startTime;
-        if ( (int)(elapsedTime / 1000L) > 100 )
-        {
-          elapsedTime = millis() - startTime;
-          display.print( (int)(elapsedTime / 60000L)); //convert to minutes
-          display.print(" mins");
-        }
-    else 
-    {
-      elapsedTime = millis() - startTime;
-      display.print( (int)(elapsedTime / 1000L));
-      display.print(" secs");
-    }
-    }
-    delay(1500);
-    display.fillScreen(BLACK);
-}
 
 void DISPLAYSERIAL()
 {
