@@ -1,4 +1,3 @@
-
 #include "TH02_dev.h"
 // #include "Arduino.h" //(I don't remember why I include this)
 // #include "Wire.h" //Permits I2C comms but TH02_dev.h includes functionality
@@ -140,4 +139,3 @@ void DISPLAYSERIAL()
   Serial.print("\t Low: ");
   Serial.println(LOWREADING);
 }
-
