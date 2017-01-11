@@ -102,11 +102,7 @@ void loop()
     DISPLAYSERIAL();
     Serial.println("Fan on");
     rainbow(20);                          //Display rainbow fade with pixels
-    analogWrite(TIP120pin, 255);          //Turn fan on "full" (255 = full)
-    if ( FANPREV != 1 && DRYMODE != 1)
-    {
-      startTime = millis();               //Store the fan start time once per drying cycle
-    }   
+    analogWrite(TIP120pin, 255);          //Turn fan on "full" (255 = full)   
   }
   else 
   {
