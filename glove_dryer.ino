@@ -4,6 +4,13 @@
 #include "DHT.h"                //Permits DHT usage
 #include "RunningAverage.h"     //Calculates running average for sensor correlation.
 #include "LowPower.h"           //Provides sleep/idle/powerdown functions
+#include <Adafruit_NeoPixel.h>  //Drives the Neopixel LEDs
+#ifdef __AVR__
+  #include <avr/power.h>
+#endif
+
+#define ledPIN 6
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(3, ledPIN, NEO_GRB + NEO_KHZ800);
 
 //Running average vars
 RunningAverage myRA(10);
@@ -30,7 +37,11 @@ DHT dhtOut;
 #include <SPI.h>
 
 void setup()
-{  
+{
+  //NeoPixels setup
+  strip.begin();
+  strip.show(); // Initialize all pixels to 'off'
+  
   //DHT sensor setup
   dhtGlove.setup(A0);
   dhtOut.setup(A1);
@@ -90,7 +101,8 @@ void loop()
   {
     DISPLAYSERIAL();
     Serial.println("Fan on");
-    analogWrite(TIP120pin, 255);          // Turn fan on "full" (255 = full)
+    rainbow(20);                          //Display rainbow fade with pixels
+    analogWrite(TIP120pin, 255);          //Turn fan on "full" (255 = full)
     if ( FANPREV != 1 && DRYMODE != 1)
     {
       startTime = millis();               //Store the fan start time once per drying cycle
@@ -98,13 +110,14 @@ void loop()
   }
   else 
   {
-  DISPLAYSERIAL();
-  Serial.println("Fan off");
-  analogWrite(TIP120pin, 0); // Fan off
-  DRYMODE=0;
+    strip.show(); //All pixels off
+    DISPLAYSERIAL();
+    Serial.println("Fan off");
+    analogWrite(TIP120pin, 0); // Fan off
+    DRYMODE=0;
   }
-  LowPower.idle(SLEEP_3S, ADC_OFF, TIMER2_OFF, TIMER1_OFF, TIMER0_OFF, 
-                SPI_OFF, USART0_OFF, TWI_OFF);
+  Serial.println("Power nap...");
+  LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
 } 
 
 //FUNCTIONS
@@ -125,4 +138,31 @@ void DISPLAYSERIAL()
   Serial.print(HIGHREADING);
   Serial.print("\t Low: ");
   Serial.println(LOWREADING);
+}
+
+void rainbow(uint8_t wait) {
+  uint16_t i, j;
+
+  for(j=0; j<256; j++) {
+    for(i=0; i<strip.numPixels(); i++) {
+      strip.setPixelColor(i, Wheel((i+j) & 255));
+    }
+    strip.show();
+    delay(wait);
+  }
+}
+
+// Input a value 0 to 255 to get a color value.
+// The colours are a transition r - g - b - back to r.
+uint32_t Wheel(byte WheelPos) {
+  WheelPos = 255 - WheelPos;
+  if(WheelPos < 85) {
+    return strip.Color(255 - WheelPos * 3, 0, WheelPos * 3);
+  }
+  if(WheelPos < 170) {
+    WheelPos -= 85;
+    return strip.Color(0, WheelPos * 3, 255 - WheelPos * 3);
+  }
+  WheelPos -= 170;
+  return strip.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
 }
