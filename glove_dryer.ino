@@ -15,7 +15,6 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(3, ledPIN, NEO_GRB + NEO_KHZ800);
 //Running average vars
 RunningAverage myRA(10);
 int samples = 0;                //Count number of samples taken
-int cycle = 0;                  //Count number of cycles between RA resets
 float previousRA = 0;           //Track previous running average (RA)
 int humidityOUT = 0;            //Humidity outside of glove
 int humidityOUTcorrelated = 0;  //Correlated DHT value
@@ -24,12 +23,8 @@ int humidityDIFF = 0;           //Difference between TH02 and DHT11 sensors
 
 const int TIP120pin = 5;        //Base pin of TIP120 transistor
 
-int DRYMODE=0;                  //Determine monitor or dry mode (fan on or off)
 int LOWREADING=200;             //Track historical low RH
 int HIGHREADING=0;              //Track historical high RH
-long startTime ;                //Track fan runtime
-long elapsedTime ;              //Track fan runtime
-int FANPREV = 0;                //Store if fan has ever run
 
 DHT dhtGlove;
 DHT dhtOut;
@@ -101,8 +96,8 @@ void loop()
   {
     DISPLAYSERIAL();
     Serial.println("Fan on");
-    rainbow(20);                          //Display rainbow fade with pixels
     analogWrite(TIP120pin, 255);          //Turn fan on "full" (255 = full)   
+    rainbow(20);                          //Display rainbow fade with pixels
   }
   else 
   {
@@ -110,7 +105,6 @@ void loop()
     DISPLAYSERIAL();
     Serial.println("Fan off");
     analogWrite(TIP120pin, 0); // Fan off
-    DRYMODE=0;
   }
   Serial.println("Power nap...");
   LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
