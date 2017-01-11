@@ -35,13 +35,7 @@ void setup()
   dhtOut.setup(A1);
   
   Serial.begin(9600);             // start serial for output
-
-  //Temp+humid requirements
-  Serial.println("THO2 power up delay, letting voltage settle");
-  /* Power up,delay 150ms,until voltage is stable */
-  delay(150);
-  /* Reset HP20x_dev */
-
+  
   //TIP120 Transistor base pin as OUTPUT
   pinMode(TIP120pin, OUTPUT);
 
