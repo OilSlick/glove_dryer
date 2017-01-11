@@ -16,7 +16,6 @@ int humidityDIFF = 0;           //Difference between TH02 and DHT11 sensors
 
 
 const int TIP120pin = 5;        //Base pin of TIP120 transistor
-const int ButtonPWR = 6;        //Provide 5v to button circuit
 const int inPin = 7;            //Read button circuit status
 
 int BUTTONVAL = 0;              //Store button circuit status as value
