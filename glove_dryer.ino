@@ -12,7 +12,7 @@ float previousRA = 0;           //Track previous running average (RA)
 int humidityOUT = 0;            //Humidity outside of glove
 int humidityOUTcorrelated = 0;  //Correlated DHT value
 int humidityGLOVE = 0;          //Humidity inside of glove
-int humidityDIFF = 0;           //Difference betwee TH02 and DHT11 sensors
+int humidityDIFF = 0;           //Difference between TH02 and DHT11 sensors
 
 
 const int TIP120pin = 5;        //Base pin of TIP120 transistor
