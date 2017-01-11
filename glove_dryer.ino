@@ -65,6 +65,9 @@ void setup()
   humidityDIFF = humidityGLOVE - humidityOUT;
   Serial.print("\t Diff: ");
   Serial.println(humidityDIFF);
+  humidityOUTcorrelated = humidityOUT + myRA.getAverage();
+  Serial.print("Correlated Room Humidity: ");
+  Serial.println(humidityOUTcorrelated);
 
   myRA.addValue(humidityDIFF);        //Add diff to running average
   samples++;
@@ -92,22 +95,25 @@ void loop()
   }
 
   //Trigger events based on difference in humidity levels
-  if (humidityGLOVE >= (humidityOUTcorrelated + 5))  
+  if (humidityGLOVE >= (humidityOUTcorrelated + 2))  
   {
     DISPLAYSERIAL();
     Serial.println("Fan on");
-    analogWrite(TIP120pin, 255);          //Turn fan on "full" (255 = full)   
-    rainbow(20);                          //Display rainbow fade with pixels
+    analogWrite(TIP120pin, 255);            //Turn fan on "full" (255 = full)   
+    rainbow(20);                            //Display rainbow fade with pixels
   }
   else 
   {
-    strip.show(); //All pixels off
     DISPLAYSERIAL();
     Serial.println("Fan off");
     analogWrite(TIP120pin, 0); // Fan off
+    Serial.println("Power nap...");
+    colorWipe(strip.Color(0, 0, 0), 50);    // Black/off
+    strip.show();                           //All pixels off
+    delay(100);                             //Delay the powernap
+    LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
+    delay(2000);                            //Delay sensor reading until all powered back on
   }
-  Serial.println("Power nap...");
-  LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
 } 
 
 //FUNCTIONS
@@ -129,6 +135,8 @@ void DISPLAYSERIAL()
   Serial.print("\t Low: ");
   Serial.println(LOWREADING);
 }
+
+//NeoPixel Functions
 
 void rainbow(uint8_t wait) {
   uint16_t i, j;
@@ -155,4 +163,13 @@ uint32_t Wheel(byte WheelPos) {
   }
   WheelPos -= 170;
   return strip.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
+}
+
+// Fill the dots one after the other with a color
+void colorWipe(uint32_t c, uint8_t wait) {
+  for(uint16_t i=0; i<strip.numPixels(); i++) {
+    strip.setPixelColor(i, c);
+    strip.show();
+    delay(wait);
+  }
 }
