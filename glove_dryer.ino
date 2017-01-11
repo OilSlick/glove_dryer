@@ -14,11 +14,8 @@ int humidityOUTcorrelated = 0;  //Correlated DHT value
 int humidityGLOVE = 0;          //Humidity inside of glove
 int humidityDIFF = 0;           //Difference between TH02 and DHT11 sensors
 
-
 const int TIP120pin = 5;        //Base pin of TIP120 transistor
-const int inPin = 7;            //Read button circuit status
 
-int BUTTONVAL = 0;              //Store button circuit status as value
 int DRYMODE=0;                  //Determine monitor or dry mode (fan on or off)
 int LOWREADING=200;             //Track historical low RH
 int HIGHREADING=0;              //Track historical high RH
@@ -34,10 +31,6 @@ void setup()
 {  
   //DHT sensor setup
   dht.setup(A0);
-  
-  //Button setup
-  //pinMode(inPin, INPUT);          // declare pushbutton as input
-  //pinMode(ButtonPWR,OUTPUT);      //provide power to button
   
   Serial.begin(9600);             // start serial for output
 
