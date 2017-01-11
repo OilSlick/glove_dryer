@@ -1,8 +1,9 @@
-// #include "TH02_dev.h"      // Needed for Grove TH02 sensor
-// #include "Arduino.h"       //(I don't remember why I include this)
-// #include "Wire.h"          //Permits I2C comms but TH02_dev.h includes functionality
-#include "DHT.h" 
-#include "RunningAverage.h"
+// #include "TH02_dev.h"        // Needed for Grove TH02 sensor
+// #include "Arduino.h"         //(I don't remember why I include this)
+// #include "Wire.h"            //Permits I2C comms but TH02_dev.h includes functionality
+#include "DHT.h"                //Permits DHT usage
+#include "RunningAverage.h"     //Calculates running average for sensor correlation.
+#include "LowPower.h"           //Provides sleep/idle/powerdown functions
 
 //Running average vars
 RunningAverage myRA(10);
@@ -102,7 +103,8 @@ void loop()
   analogWrite(TIP120pin, 0); // Fan off
   DRYMODE=0;
   }
-  delay(1000);
+  LowPower.idle(SLEEP_3S, ADC_OFF, TIMER2_OFF, TIMER1_OFF, TIMER0_OFF, 
+                SPI_OFF, USART0_OFF, TWI_OFF);
 } 
 
 //FUNCTIONS
