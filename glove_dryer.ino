@@ -1,6 +1,6 @@
-#include "TH02_dev.h"
-// #include "Arduino.h" //(I don't remember why I include this)
-// #include "Wire.h" //Permits I2C comms but TH02_dev.h includes functionality
+// #include "TH02_dev.h"      // Needed for Grove TH02 sensor
+// #include "Arduino.h"       //(I don't remember why I include this)
+// #include "Wire.h"          //Permits I2C comms but TH02_dev.h includes functionality
 #include "DHT.h" 
 #include "RunningAverage.h"
 
@@ -23,14 +23,16 @@ long startTime ;                //Track fan runtime
 long elapsedTime ;              //Track fan runtime
 int FANPREV = 0;                //Store if fan has ever run
 
-DHT dht;
+DHT dhtGlove;
+DHT dhtOut;
   
 #include <SPI.h>
 
 void setup()
 {  
   //DHT sensor setup
-  dht.setup(A0);
+  dhtGlove.setup(A0);
+  dhtOut.setup(A1);
   
   Serial.begin(9600);             // start serial for output
 
@@ -39,16 +41,13 @@ void setup()
   /* Power up,delay 150ms,until voltage is stable */
   delay(150);
   /* Reset HP20x_dev */
-  TH02.begin();
-  delay(100);
-  
-  Serial.println("TH02 Ready"); 
 
   //TIP120 Transistor base pin as OUTPUT
   pinMode(TIP120pin, OUTPUT);
 
   myRA.clear(); // explicitly start RA clean
-  delay(dht.getMinimumSamplingPeriod()); //play nice with DHT sensor
+  delay(dhtGlove.getMinimumSamplingPeriod()); //play nice with DHT sensor
+  delay(dhtOut.getMinimumSamplingPeriod());   //play nice with DHT sensor
 
   Serial.println("Beginning sensor correlation");
 
@@ -56,10 +55,10 @@ void setup()
   {
   Serial.print("Millis: ");
   Serial.println(millis());
-  humidityGLOVE = TH02.ReadHumidity();
+  humidityGLOVE = dhtGlove.getHumidity();
   Serial.print("TH02: ");
   Serial.print(humidityGLOVE);
-  humidityOUT = dht.getHumidity();
+  humidityOUT = dhtOut.getHumidity();
   Serial.print("\t DHT: ");
   Serial.print(humidityOUT);
   humidityDIFF = humidityGLOVE - humidityOUT;
@@ -75,9 +74,9 @@ void setup()
  
 void loop()
 { 
-  humidityGLOVE = TH02.ReadHumidity();
-  humidityOUT = dht.getHumidity();
-  humidityDIFF = TH02.ReadHumidity() - humidityOUT;
+  humidityGLOVE = dhtGlove.getHumidity();
+  humidityOUT = dhtOut.getHumidity();
+  humidityDIFF = humidityGLOVE - humidityOUT;
   humidityOUTcorrelated = humidityOUT + myRA.getAverage();
   
   //Track historical high and low readings for display on LCD
@@ -92,7 +91,7 @@ void loop()
   }
 
   //Trigger events based on difference in humidity levels
-  if (humidityGLOVE >= (humidityOUTcorrelated + 4))  
+  if (humidityGLOVE >= (humidityOUTcorrelated + 5))  
   {
     DISPLAYSERIAL();
     Serial.println("Fan on");
