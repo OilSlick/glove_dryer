@@ -13,14 +13,17 @@ This project uses an Arduino Uno to read relative humidity from two sensors; one
 
 **As of December 4, 2016 this project is still being developed.** While the Arduino sketch does provide full functionality, I am only currently testing with 1/2 of the solution; an exhaust fan inside the glove. The goal is to have another fan (per glove) that blows outside air into the glove so that there is a push/pull type action on air inside the glove. 
 
+###Update January 13, 2017
+
+The Arduino Sketch is mostly done. There is some lag in detecting the initial glove placement. This is caused by powering down the peripherals to save power. I think the solution is to power down for 8 seconds then leave it powered up for 3 seconds to give the DHT11 sensors enough time to register the humid glove. 
+
 ### To-Do
-* [ ] Switch FANCONTINUOUS to use millis instead of delay
-* [ ] Have fan-to-PVC pipe bracket printed 3D
-* [ ] Enable power-save for Arduino
-* [ ] Put LCD on PWM pin and power up/down as needed
- * [ ] Utilize IfSerial
-* [ ] Power Arduino with [PowerBoost 1000 Charger](https://www.adafruit.com/products/2465) (currently on AAA's)
- * [ ] Recharge Arduino from wall wart used to power fans
+* [x] ~~Switch FANCONTINUOUS to use millis instead of delay~~ (decided against FANCONTINUOUS)
+* [x] Have fan-to-PVC pipe bracket printed 3D
+* [x] Enable power-save for Arduino
+* [x] ~~Put LCD on PWM pin and power up/down as needed~~ (removed LCD)
+ * [x] Utilize IfSerial
+* [x] ~~Power Arduino with [PowerBoost 1000 Charger](https://www.adafruit.com/products/2465)~~ (will use 7805 regulator with wall wart)
 * [ ] Have Arduino case and pipe-supports printed 3D
 
 
