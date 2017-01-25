@@ -24,7 +24,7 @@ The Arduino Sketch is mostly done. There is some lag in detecting the initial gl
 * [ ] ~~Put LCD on PWM pin and power up/down as needed~~ (removed LCD)
  * [x] Utilize IfSerial
 * [ ] ~~Power Arduino with [PowerBoost 1000 Charger](https://www.adafruit.com/products/2465)~~ (will use 7805 regulator with wall wart)
-* [ ] ~~Have Arduino case and pipe-supports printed 3D (test print proved the box would be prohibitively expensive)
+* [ ] ~~Have Arduino case and pipe-supports printed 3D~~ (test print proved the box would be prohibitively expensive)
 * [ ] Complete box (using old moo card box)
 * [ ] Final assembly of fan posts
 
