@@ -18,13 +18,15 @@ This project uses an Arduino Uno to read relative humidity from two sensors; one
 The Arduino Sketch is mostly done. There is some lag in detecting the initial glove placement. This is caused by powering down the peripherals to save power. I think the solution is to power down for 8 seconds then leave it powered up for 3 seconds to give the DHT11 sensors enough time to register the humid glove. 
 
 ### To-Do
-* [x] ~~Switch FANCONTINUOUS to use millis instead of delay~~ (decided against FANCONTINUOUS)
+* [ ] ~~Switch FANCONTINUOUS to use millis instead of delay~~ (decided against FANCONTINUOUS)
 * [x] Have fan-to-PVC pipe bracket printed 3D
 * [x] Enable power-save for Arduino
-* [x] ~~Put LCD on PWM pin and power up/down as needed~~ (removed LCD)
+* [ ] ~~Put LCD on PWM pin and power up/down as needed~~ (removed LCD)
  * [x] Utilize IfSerial
-* [x] ~~Power Arduino with [PowerBoost 1000 Charger](https://www.adafruit.com/products/2465)~~ (will use 7805 regulator with wall wart)
-* [ ] Have Arduino case and pipe-supports printed 3D
+* [ ] ~~Power Arduino with [PowerBoost 1000 Charger](https://www.adafruit.com/products/2465)~~ (will use 7805 regulator with wall wart)
+* [ ] ~~Have Arduino case and pipe-supports printed 3D (test print proved the box would be prohibitively expensive)
+* [ ] Complete box (using old moo card box)
+* [ ] Final assembly of fan posts
 
 
 *The sensor I am using outside of the gloves is a DHT11 which is [known to have calibration issues](https://forum.arduino.cc/index.php?topic=96470.0). This project doesn't require hyper-accurate RH readings so I use a rather clumsy method of calibrating the two using a running average of the difference.
