@@ -25,6 +25,8 @@ const int TIP120pin = 5;        //Base pin of TIP120 transistor
 int LOWREADING=200;             //Track historical low RH
 int HIGHREADING=0;              //Track historical high RH
 
+bool FANON = 0;             //Track fan state
+
 DHT dhtGlove;
 DHT dhtOut;
   
@@ -36,6 +38,9 @@ void setup()
   pinMode(redLED, OUTPUT);
   pinMode(greenLED, OUTPUT);
   pinMode(blueLED, OUTPUT);
+  analogWrite(redLED, 255);
+  analogWrite(greenLED, 255);
+  analogWrite(blueLED, 255);  
   
   //DHT sensor setup
   dhtGlove.setup(A0);
@@ -55,9 +60,7 @@ void setup()
 }
  
 void loop()
-{ 
-  setColor(0, 8, 0);  // green
-  
+{   
   humidityGLOVE = dhtGlove.getHumidity();
   humidityOUT = dhtOut.getHumidity();
   humidityDIFF = humidityGLOVE - humidityOUT;
@@ -81,7 +84,10 @@ void loop()
       DISPLAYSERIAL();
       Serial.println("Fan on");
     }
-    analogWrite(TIP120pin, 255);            //Turn fan on "full" (255 = full)   
+    analogWrite(TIP120pin, 255);            //Turn fan on "full" (255 = full)  
+    FANON = 1;
+    setColor(0, 0, 32);  // blue
+    //delay(30000); //run fan for 30 minutes
   }
   else 
   {
@@ -89,12 +95,10 @@ void loop()
     {
       DISPLAYSERIAL();
       Serial.println("Fan off");
-      Serial.println("Power nap...");
     }
     analogWrite(TIP120pin, 0); // Fan off
-    //delay(100);                             //Delay the powernap 
-    //LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
-    //delay(2000);                            //Delay sensor reading until all powered back on
+    FANON = 0;
+    setColor(0, 0, 0);  // LED off
   }
 } 
 
@@ -141,11 +145,11 @@ void correlateSensors()
   }
 
   //Blink LED
-  setColor(0, 0, 16);  // blue
+  setColor(0, 0, 32);  // blue
   delay(50);
   setColor(0, 0, 0);      // no LED
   delay(50);
-  setColor(0, 0, 16);  // blue
+  setColor(0, 0, 32);  // blue
   delay(50);
   setColor(0, 0, 0);      // no LED
 
@@ -158,7 +162,7 @@ void correlateSensors()
 
 void setColor(int red, int green, int blue)
 {
-  analogWrite(redLED, red);
-  analogWrite(greenLED, green);
-  analogWrite(blueLED, blue);  
+  analogWrite(redLED, 255-red);
+  analogWrite(greenLED, 255-green);
+  analogWrite(blueLED, 255-blue);  
 }
