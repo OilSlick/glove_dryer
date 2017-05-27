@@ -56,6 +56,8 @@ void setup()
  
 void loop()
 { 
+  setColor(0, 8, 0);  // green
+  
   humidityGLOVE = dhtGlove.getHumidity();
   humidityOUT = dhtOut.getHumidity();
   humidityDIFF = humidityGLOVE - humidityOUT;
@@ -74,20 +76,25 @@ void loop()
   //Trigger events based on difference in humidity levels
   if (humidityGLOVE >= (humidityOUTcorrelated + 2))  
   {
-    DISPLAYSERIAL();
-    Serial.println("Fan on");
+    if ( Serial )
+    {
+      DISPLAYSERIAL();
+      Serial.println("Fan on");
+    }
     analogWrite(TIP120pin, 255);            //Turn fan on "full" (255 = full)   
-    //rainbow(20);                            //Display rainbow fade with pixels
   }
   else 
   {
-    DISPLAYSERIAL();
-    Serial.println("Fan off");
+    if ( Serial )
+    {
+      DISPLAYSERIAL();
+      Serial.println("Fan off");
+      Serial.println("Power nap...");
+    }
     analogWrite(TIP120pin, 0); // Fan off
-    Serial.println("Power nap...");
-    delay(100);                             //Delay the powernap 
-    LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
-    delay(2000);                            //Delay sensor reading until all powered back on
+    //delay(100);                             //Delay the powernap 
+    //LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
+    //delay(2000);                            //Delay sensor reading until all powered back on
   }
 } 
 
