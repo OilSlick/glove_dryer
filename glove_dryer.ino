@@ -1,31 +1,26 @@
-#include "DHT.h"                //Permits DHT usage
-#include "RunningAverage.h"     //Calculates running average for sensor correlation.
-#include "LowPower.h"           //Provides sleep/idle/powerdown functions
+#include "DHT.h"                            //Permits DHT usage
+#include "RunningAverage.h"                 //Calculates running average for sensor correlation.
 #ifdef __AVR__
   #include <avr/power.h>
 #endif
 
 //Running average vars
 RunningAverage myRA(10);
-int samples = 0;                //Count number of RA samples taken
-float previousRA = 0;           //Track previous running average (RA)
 
 //For RGB LED
 const int redLED = 9;
 const int greenLED = 10;
 const int blueLED = 11;
+const int TIP120pin = 5;                    //Base pin of TIP120 transistor
 
-int humidityOUT = 0;            //Humidity outside of glove
-int humidityOUTcorrelated = 0;  //Correlated DHT value
-int humidityGLOVE = 0;          //Humidity inside of glove
-int humidityDIFF = 0;           //Difference between DHT11 sensors
+int humidityOUT = 0;                        //Humidity outside of glove
+int humidityOUTcorrelated = 0;              //Correlated DHT value
+int humidityGLOVE = 0;                      //Humidity inside of glove
+int humidityDIFF = 0;                       //Difference between DHT11 sensors
 
-const int TIP120pin = 5;        //Base pin of TIP120 transistor
-
-int LOWREADING=200;             //Track historical low RH
-int HIGHREADING=0;              //Track historical high RH
-
-bool FANON = 0;             //Track fan state
+bool FANON = 0;                             //Track fan state
+volatile unsigned long lastOnTime;          //Record the time fan turned on
+int long onDuration = 120000;               //Time in millis to leave fan on
 
 DHT dhtGlove;
 DHT dhtOut;
@@ -46,7 +41,7 @@ void setup()
   dhtGlove.setup(A0);
   dhtOut.setup(A1);
   
-  Serial.begin(9600);             // start serial for output
+  Serial.begin(9600);                         // start serial for output
   
   //TIP120 Transistor base pin as OUTPUT
   pinMode(TIP120pin, OUTPUT);
@@ -61,23 +56,27 @@ void setup()
  
 void loop()
 {   
+  if ( FANON == 1 )
+  {
+    setColor(0, 0, 32);  // blue
+    while (millis() <= (lastOnTime + onDuration) ); 
+      {
+        analogWrite(TIP120pin, 255);        //Turn fan on "full" (255 = full)
+      }
+  }
+  else if ( FANON == 0 )
+  {
+    setColor(0, 32, 0);                     // LED Green
+    lastOnTime = 0;                         //Reset timer
+  }
+  
   humidityGLOVE = dhtGlove.getHumidity();
   humidityOUT = dhtOut.getHumidity();
   humidityDIFF = humidityGLOVE - humidityOUT;
   humidityOUTcorrelated = humidityOUT + myRA.getAverage();
   
-  //Track historical high and low readings for display on LCD
-  if (humidityGLOVE > HIGHREADING)
-  {
-    HIGHREADING=humidityGLOVE;
-  }
-  if (humidityGLOVE < LOWREADING)
-  {
-     LOWREADING=humidityGLOVE;
-  }
-
   //Trigger events based on difference in humidity levels
-  if (humidityGLOVE >= (humidityOUTcorrelated + 2))  
+  if (humidityGLOVE >= (humidityOUTcorrelated + 2) && FANON == 0)  
   {
     if ( Serial )
     {
@@ -86,8 +85,6 @@ void loop()
     }
     analogWrite(TIP120pin, 255);            //Turn fan on "full" (255 = full)  
     FANON = 1;
-    setColor(0, 0, 32);  // blue
-    //delay(30000); //run fan for 30 minutes
   }
   else 
   {
@@ -98,8 +95,8 @@ void loop()
     }
     analogWrite(TIP120pin, 0); // Fan off
     FANON = 0;
-    setColor(0, 0, 0);  // LED off
   }
+  delay(1000);
 } 
 
 //FUNCTIONS
@@ -115,11 +112,7 @@ void DISPLAYSERIAL()
   Serial.print("\t Correlated Room Humidity: ");
   Serial.print(humidityOUTcorrelated);
   Serial.print("\t Diff RA: ");
-  Serial.print(myRA.getAverage(), 3);
-  Serial.print("\t High: ");
-  Serial.print(HIGHREADING);
-  Serial.print("\t Low: ");
-  Serial.println(LOWREADING);
+  Serial.println(myRA.getAverage(), 3);
 }
 
 void correlateSensors()
@@ -145,16 +138,15 @@ void correlateSensors()
   }
 
   //Blink LED
-  setColor(0, 0, 32);  // blue
+  setColor(64, 32, 0);  // blue
   delay(50);
   setColor(0, 0, 0);      // no LED
   delay(50);
-  setColor(0, 0, 32);  // blue
+  setColor(64, 32, 0);  // blue
   delay(50);
   setColor(0, 0, 0);      // no LED
 
   myRA.addValue(humidityDIFF);        //Add diff to running average
-  samples++;
 
   delay(1000);
   }
