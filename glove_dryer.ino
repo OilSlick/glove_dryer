@@ -1,5 +1,6 @@
 #include "DHT.h"                            //Permits DHT usage
 #include "RunningAverage.h"                 //Calculates running average for sensor correlation.
+#include <SPI.h>
 #ifdef __AVR__
   #include <avr/power.h>
 #endif
@@ -24,8 +25,6 @@ int long onDuration = 120000;               //Time in millis to leave fan on
 
 DHT dhtGlove;
 DHT dhtOut;
-  
-#include <SPI.h>
 
 void setup()
 {
@@ -48,10 +47,10 @@ void setup()
 
   myRA.clear(); // explicitly start RA clean
   delay(dhtGlove.getMinimumSamplingPeriod()); //play nice with DHT sensor
-  delay(dhtOut.getMinimumSamplingPeriod());   //play nice with DHT sensor
 
   Serial.println("Beginning sensor correlation");
   correlateSensors();
+  Serial.println("Ready");
 }
  
 void loop()
@@ -59,21 +58,24 @@ void loop()
   if ( FANON == 1 )
   {
     setColor(0, 0, 32);  // blue
-    while (millis() <= (lastOnTime + onDuration) ); 
+    while (millis() <= (lastOnTime + onDuration) ) 
       {
         analogWrite(TIP120pin, 255);        //Turn fan on "full" (255 = full)
       }
+      analogWrite(TIP120pin, 255);        //Turn fan on "full" (255 = full)
+      FANON = 0;
+      lastOnTime = 0;                         //Reset timer
   }
   else if ( FANON == 0 )
   {
     setColor(0, 32, 0);                     // LED Green
     lastOnTime = 0;                         //Reset timer
-  }
-  
-  humidityGLOVE = dhtGlove.getHumidity();
-  humidityOUT = dhtOut.getHumidity();
-  humidityDIFF = humidityGLOVE - humidityOUT;
-  humidityOUTcorrelated = humidityOUT + myRA.getAverage();
+
+    humidityGLOVE = dhtGlove.getHumidity();
+    humidityOUT = dhtOut.getHumidity();
+    humidityDIFF = humidityGLOVE - humidityOUT;
+    humidityOUTcorrelated = humidityOUT + myRA.getAverage();
+    }
   
   //Trigger events based on difference in humidity levels
   if (humidityGLOVE >= (humidityOUTcorrelated + 2) && FANON == 0)  
@@ -81,22 +83,28 @@ void loop()
     if ( Serial )
     {
       DISPLAYSERIAL();
-      Serial.println("Fan on");
     }
     analogWrite(TIP120pin, 255);            //Turn fan on "full" (255 = full)  
     FANON = 1;
   }
-  else 
+  else if ( humidityGLOVE < (humidityOUTcorrelated + 2) && FANON == 1 )
   {
     if ( Serial )
     {
       DISPLAYSERIAL();
-      Serial.println("Fan off");
     }
     analogWrite(TIP120pin, 0); // Fan off
     FANON = 0;
+    lastOnTime = 0;                         //Reset timer
   }
-  delay(1000);
+  else
+  {
+    if ( Serial )
+    {
+      DISPLAYSERIAL();
+    }
+  }
+  delay(dhtGlove.getMinimumSamplingPeriod()); //play nice with DHT sensor
 } 
 
 //FUNCTIONS
@@ -111,8 +119,23 @@ void DISPLAYSERIAL()
   Serial.print("%");
   Serial.print("\t Correlated Room Humidity: ");
   Serial.print(humidityOUTcorrelated);
-  Serial.print("\t Diff RA: ");
+  Serial.print("\t Running Average: ");
   Serial.println(myRA.getAverage(), 3);
+  Serial.print("DHT-Glove Status: ");
+  Serial.print(dhtGlove.getStatusString());
+  Serial.print("\t DHT-Out Status: ");
+  Serial.print(dhtOut.getStatusString());
+  Serial.print("\t DHT Delay ");
+  Serial.println(dhtGlove.getMinimumSamplingPeriod());
+  Serial.print("Fan Status: ");
+  if ( FANON == 1)
+  {
+    Serial.println("ON");
+  }
+  else 
+  {
+    Serial.println("OFF");
+  }
 }
 
 void correlateSensors()
@@ -124,6 +147,26 @@ void correlateSensors()
   humidityOUT = dhtOut.getHumidity();
   humidityDIFF = humidityGLOVE - humidityOUT;
   humidityOUTcorrelated = humidityOUT + myRA.getAverage();
+
+  while ( humidityGLOVE == 0 || humidityOUT )
+  {
+    //Fade red in
+    for (int fadeValue = 0 ; fadeValue <= 255; fadeValue += 5) {
+    // sets the value (range from 0 to 255):
+    setColor(fadeValue, 0, 0);  // red
+    // wait for 30 milliseconds to see the dimming effect
+    delay(30);
+  }
+
+  //Fade red out
+  for (int fadeValue = 255 ; fadeValue >= 0; fadeValue -= 5) {
+    // sets the value (range from 0 to 255):
+    setColor(fadeValue, 0, 0);  // red
+    // wait for 30 milliseconds to see the dimming effect
+    delay(30);
+  }
+  }
+  
   if ( Serial ) {
     Serial.print("Millis: ");
     Serial.println(millis());
@@ -138,17 +181,17 @@ void correlateSensors()
   }
 
   //Blink LED
-  setColor(64, 32, 0);  // blue
+  setColor(64, 32, 0);  // Yellow
   delay(50);
   setColor(0, 0, 0);      // no LED
   delay(50);
-  setColor(64, 32, 0);  // blue
+  setColor(64, 32, 0);  // Yellow
   delay(50);
   setColor(0, 0, 0);      // no LED
 
   myRA.addValue(humidityDIFF);        //Add diff to running average
 
-  delay(1000);
+  delay(dhtGlove.getMinimumSamplingPeriod()); //play nice with DHT sensor
   }
 }
 
