@@ -78,7 +78,7 @@ void loop()
     }
   
   //Trigger events based on difference in humidity levels
-  if (humidityGLOVE >= (humidityOUTcorrelated + 2) && FANON == 0)  
+  if (humidityGLOVE >= (humidityOUTcorrelated + 3) && FANON == 0)  
   {
     if ( Serial )
     {
