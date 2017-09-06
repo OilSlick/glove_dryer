@@ -23,7 +23,7 @@ char dhtGloveStatus;
 
 bool FANON = 0;                             //Track fan state
 volatile unsigned long lastOnTime;          //Record the time fan turned on
-int long onDuration = (30*60*1000);         //Time in millis to leave fan on
+int long onDuration = (1800000);         //Time in millis to leave fan on
 
 DHT dhtGlove;
 DHT dhtOut;
@@ -57,35 +57,34 @@ void loop()
 {   
   if ( FANON == 1 )
   {
-    setColor(0, 0, 32);  // blue
     while (millis() <= (lastOnTime + onDuration) ) 
-      {
+    {
+        setColor(0, 0, 32);  // blue
         analogWrite(TIP120pin, 255);        //Turn fan on "full" (255 = full)
-      }
-      analogWrite(TIP120pin, 255);          //Turn fan on "full" (255 = full)
-      FANON = 0;
-      lastOnTime = 0;                       //Reset timer
+    }
+    lastOnTime = 0;                         //Reset timer
+    readSensors();
   }
-  else if ( FANON == 0 )
+  else 
   {
+    analogWrite(TIP120pin, 0); // Fan off
+    
     setColor(0, 32, 0);                     // LED Green
     lastOnTime = 0;                         //Reset timer
-
-    humidityGLOVE = dhtGlove.getHumidity();
-    humidityOUT = dhtOut.getHumidity();
-    humidityDIFF = humidityGLOVE - humidityOUT;
-    humidityOUTcorrelated = humidityOUT + myRA.getAverage();
-    }
+    readSensors();
+  }
   
   //Trigger events based on difference in humidity levels
-  if (humidityGLOVE >= (humidityOUTcorrelated + 3) && FANON == 0)  
+  if (humidityGLOVE >= (humidityOUTcorrelated + 3) )  
   {
     if ( Serial )
     {
       DISPLAYSERIAL();
     }
-    analogWrite(TIP120pin, 255);            //Turn fan on "full" (255 = full)  
+    analogWrite(TIP120pin, 255);            //Turn fan on immediately
+    setColor(0, 0, 32);  // blue
     FANON = 1;
+    lastOnTime = millis();
   }
   else if ( humidityGLOVE < (humidityOUTcorrelated + 2) && FANON == 1 )
   {
@@ -93,7 +92,8 @@ void loop()
     {
       DISPLAYSERIAL();
     }
-    analogWrite(TIP120pin, 0); // Fan off
+    analogWrite(TIP120pin, 0);              // Fan off immediately
+    setColor(0, 32, 0);                     // LED Green
     FANON = 0;
     lastOnTime = 0;                         //Reset timer
   }
@@ -109,6 +109,13 @@ void loop()
 
 //FUNCTIONS
 
+void readSensors()
+{
+  humidityGLOVE = dhtGlove.getHumidity();
+  humidityOUT = dhtOut.getHumidity();
+  humidityDIFF = humidityGLOVE - humidityOUT;
+  humidityOUTcorrelated = humidityOUT + myRA.getAverage();
+}
 void DISPLAYSERIAL()
 {
   Serial.print("Glove Humidity: ");
@@ -200,4 +207,3 @@ void blinkError()
     delay(30);
   }
 }
-
