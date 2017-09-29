@@ -22,8 +22,9 @@ char dhtOutStatus;
 char dhtGloveStatus;                        
 
 bool FANON = 0;                             //Track fan state
+bool DEBUG = 0;                             //Set to "1" to initiate debug routine
 volatile unsigned long lastOnTime;          //Record the time fan turned on
-int long onDuration = (1800000);         //Time in millis to leave fan on
+int long onDuration = (1800000);            //Time in millis to leave fan on
 
 DHT dhtGlove;
 DHT dhtOut;
@@ -54,7 +55,16 @@ void setup()
 }
  
 void loop()
-{   
+{  
+  if ( DEBUG == 1)
+  {
+     LEDblinkRed();
+     turnfanon();
+     delay(2000);
+     LEDblinkRed();
+     turnfanoff();
+     delay(2000);     
+  }
   if ( FANON == 1 )
   {
     while (millis() <= (lastOnTime + onDuration) ) 
@@ -81,9 +91,7 @@ void loop()
     {
       DISPLAYSERIAL();
     }
-    analogWrite(TIP120pin, 255);            //Turn fan on immediately
-    setColor(0, 0, 32);  // blue
-    FANON = 1;
+    turnfanon();
     lastOnTime = millis();
   }
   else if ( humidityGLOVE < (humidityOUTcorrelated + 2) && FANON == 1 )
@@ -92,9 +100,7 @@ void loop()
     {
       DISPLAYSERIAL();
     }
-    analogWrite(TIP120pin, 0);              // Fan off immediately
-    setColor(0, 32, 0);                     // LED Green
-    FANON = 0;
+    turnfanoff();
     lastOnTime = 0;                         //Reset timer
   }
   else
@@ -108,6 +114,29 @@ void loop()
 } 
 
 //FUNCTIONS
+
+void turnfanon()
+{
+  analogWrite(TIP120pin, 255);
+  setColor(0, 0, 32);                     // LED blue
+  FANON = 1;
+}
+void turnfanoff()
+{
+  analogWrite(TIP120pin, 0);
+  setColor(0, 32, 0);                     // LED Green
+  FANON = 0;
+}
+void LEDblinkRed()
+{
+  setColor(255, 0, 0);  // Red
+  delay(50);
+  setColor(0, 0, 0);      // no LED
+  delay(50);
+  setColor(255, 0, 0);  // Red
+  delay(50);
+  setColor(0, 0, 0);      // no LED
+}
 
 void readSensors()
 {
