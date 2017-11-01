@@ -10,10 +10,10 @@ This project uses an Arduino Uno to read relative humidity from two sensors; one
 ### To-Do
 * [x] ~~Switch FANCONTINUOUS to use millis instead of delay~~ (decided against FANCONTINUOUS)
 * [x] Have fan-to-PVC pipe bracket printed 3D
-* [ ] ~~Enable power-save for Arduino (June 1, 2017: removed power-saving code)
+* [ ] ~~Enable power-save for Arduino~~ (June 1, 2017: removed power-saving code)
 * [ ] ~~Put LCD on PWM pin and power up/down as needed~~ (removed LCD)
  * [x] Utilize IfSerial
-* [ ] ~~Power Arduino with [PowerBoost 1000 Charger](https://www.adafruit.com/products/2465)~~ (will use 7805 regulator with wall wart)
+* [ ] ~~Power Arduino with [PowerBoost 1000 Charger](https://www.adafruit.com/products/2465)~~ (used OKI-78SR with 12v wall plug)
 * [x] ~~Have Arduino case~~ and pipe-supports printed 3D (test print proved the box would be prohibitively expensive. Pipe supports work great)
 * [x] Complete box (~~using old moo card box~~ Used plastic box from Muji)
 * [x] Final assembly of fan posts
