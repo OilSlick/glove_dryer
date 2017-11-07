@@ -13,6 +13,7 @@ const int TIP120pin = 5;                    //Base pin of TIP120 transistor
 const int redLED = 9;
 const int greenLED = 10;
 const int blueLED = 11;
+const int buttonpin = 12;                      //Output of capacitive touch switch
 
 int humidityOUT = 0;                        //Humidity outside of glove
 int humidityOUTcorrelated = 0;              //Correlated DHT value
@@ -24,7 +25,8 @@ char dhtGloveStatus;
 bool FANON = 0;                             //Track fan state
 bool DEBUG = 0;                             //Set to "1" to initiate debug routine
 volatile unsigned long lastOnTime;          //Record the time fan turned on
-int long onDuration = (1800000);            //Time in millis to leave fan on
+// int long onDuration = (1800000);            //Time in millis to leave fan on
+int long onDuration = (5000);            //For debugging
 
 DHT dhtGlove;
 DHT dhtOut;
@@ -32,6 +34,7 @@ DHT dhtOut;
 void setup()
 {
   pinMode(TIP120pin, OUTPUT);
+  pinMode(buttonpin, INPUT);
   
   //For RGB LED
   pinMode(redLED, OUTPUT);
@@ -55,7 +58,11 @@ void setup()
 }
  
 void loop()
-{  
+{ 
+  if ( buttonpin == HIGH )
+  {
+    Serial.println("button activated"); 
+  }
   if ( DEBUG == 1)
   {
      LEDblinkRed();
@@ -67,12 +74,15 @@ void loop()
   }
   if ( FANON == 1 )
   {
-    while (millis() <= (lastOnTime + onDuration) ) 
+   /* while (millis() <= (lastOnTime + onDuration) ) 
     {
         setColor(0, 0, 32);  // blue
         analogWrite(TIP120pin, 255);        //Turn fan on "full" (255 = full)
+    } */
+    if ( millis() >= (lastOnTime + onDuration) )
+    {
+      lastOnTime = 0;                         //Reset timer
     }
-    lastOnTime = 0;                         //Reset timer
     readSensors();
   }
   else 
@@ -94,7 +104,7 @@ void loop()
     turnfanon();
     lastOnTime = millis();
   }
-  else if ( humidityGLOVE < (humidityOUTcorrelated + 2) && FANON == 1 )
+  else if ( humidityGLOVE <= (humidityOUTcorrelated + 2) && FANON == 1 )
   {
     if ( Serial )
     {
