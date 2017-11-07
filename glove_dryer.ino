@@ -25,8 +25,7 @@ char dhtGloveStatus;
 bool FANON = 0;                             //Track fan state
 bool DEBUG = 0;                             //Set to "1" to initiate debug routine
 volatile unsigned long lastOnTime;          //Record the time fan turned on
-// int long onDuration = (1800000);            //Time in millis to leave fan on
-int long onDuration = (5000);               //For debugging
+int long onDuration = (1800000);            //Time in millis to leave fan on
 
 DHT dhtGlove;
 DHT dhtOut;
@@ -79,18 +78,18 @@ void loop()
   }
   if ( FANON == 1 )
   {
-    fadeBlue();
+    LEDfadeBlue();
    if ( millis() >= (lastOnTime + onDuration) )
     {
       //Leave fans on but reset timer and re-evaluate status
-      lastOnTime = 0;                         
+      lastOnTime = 0;
+      readSensors();                         
     }
-    readSensors();
   }
   else 
   {
     analogWrite(TIP120pin, 0); // Fan off
-    fadeGreen();
+    LEDfadeGreen();
 
     lastOnTime = 0;                         //Reset timer
     readSensors();
@@ -106,7 +105,9 @@ void loop()
     turnfanon();
     lastOnTime = millis();
   }
-  else if ( humidityGLOVE <= (humidityOUTcorrelated + 2) && FANON == 1 )
+  else if ( humidityGLOVE <= (humidityOUTcorrelated + 2) && FANON == 1 && (digitalRead(buttonpin) == LOW) )
+  //if the two sensors are close enough, the fan is already on, and the button isn't active, turn fan off
+  //if the button is on, over-ride sensors and stay on. 
   {
     if ( Serial )
     {
@@ -130,13 +131,11 @@ void loop()
 void turnfanon()
 {
   analogWrite(TIP120pin, 255);
-  //setColor(0, 0, 32);                     // LED blue
   FANON = 1;
 }
 void turnfanoff()
 {
   analogWrite(TIP120pin, 0);
-  //setColor(0, 255, 0);                     // LED Green
   FANON = 0;
 }
 void LEDblinkRed()
@@ -188,7 +187,7 @@ void DISPLAYSERIAL()
 
 void correlateSensors()
 {
-  while (millis() < 10000)
+  while (millis() < 11000)
   {
     humidityGLOVE = dhtGlove.getHumidity();
     humidityOUT = dhtOut.getHumidity();
@@ -230,26 +229,7 @@ void setColor(int red, int green, int blue)
   analogWrite(blueLED, 255-blue);  
 }
 
-void blinkError()
-{
-  //Fade red in
-    for (int fadeValue = 0 ; fadeValue <= 64; fadeValue += 2) {
-    // sets the value (range from 0 to 255):
-    setColor(fadeValue, 0, 0);  // red
-    // wait for 30 milliseconds to see the dimming effect
-    delay(30);
-  }
-
-  //Fade red out
-  for (int fadeValue = 64 ; fadeValue >= 0; fadeValue -= 2) {
-    // sets the value (range from 0 to 255):
-    setColor(fadeValue, 0, 0);  // red
-    // wait for 30 milliseconds to see the dimming effect
-    delay(30);
-  }
-}
-
-void fadeGreen()
+void LEDfadeGreen()
 {
       //Fade green in
     for (int fadeValue = 0 ; fadeValue <= 16; fadeValue += 1) {
@@ -268,7 +248,7 @@ void fadeGreen()
   }
 }
 
-void fadeBlue()
+void LEDfadeBlue()
 {
       //Fade green in
     for (int fadeValue = 0 ; fadeValue <= 16; fadeValue += 1) {
