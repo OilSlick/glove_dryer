@@ -10,14 +10,15 @@ This project uses an Arduino Uno to read relative humidity from two sensors; one
 ### To-Do
 * [x] ~~Switch FANCONTINUOUS to use millis instead of delay~~ (decided against FANCONTINUOUS)
 * [x] Have fan-to-PVC pipe bracket printed 3D
-* [ ] ~~Enable power-save for Arduino~~ (June 1, 2017: removed power-saving code)
-* [ ] ~~Put LCD on PWM pin and power up/down as needed~~ (removed LCD)
+* [x] ~~Enable power-save for Arduino~~ (June 1, 2017: removed power-saving code)
+* [x] ~~Put LCD on PWM pin and power up/down as needed~~ (removed LCD)
  * [x] Utilize IfSerial
-* [ ] ~~Power Arduino with [PowerBoost 1000 Charger](https://www.adafruit.com/products/2465)~~ (used OKI-78SR with 12v wall plug)
+* [x] ~~Power Arduino with [PowerBoost 1000 Charger](https://www.adafruit.com/products/2465)~~ (used OKI-78SR with 12v wall plug)
 * [x] ~~Have Arduino case~~ and pipe-supports printed 3D (test print proved the box would be prohibitively expensive. Pipe supports work great)
 * [x] Complete box (~~using old moo card box~~ Used plastic box from Muji)
 * [x] Final assembly of fan posts
-* [ ] Add a momentary switch for manual correlation
+* [x] Add a momentary switch ~~for manual correlation~~ (added a toggle switch + timer to manually run dryer)
+* [ ] Consider ways to re-correlate after a period of time (maybe after X cycles of fanoff?)
 
 
 *I am using two DHT11 humidity sensors and they tend to be roughly 2 percentage points off from one another, so I do a series of tests to see what the difference is between the two then apply that value to create a correlated value to compensate for the difference.
