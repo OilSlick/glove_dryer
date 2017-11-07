@@ -19,6 +19,7 @@ This project uses an Arduino Uno to read relative humidity from two sensors; one
 * [x] Final assembly of fan posts
 * [x] Add a momentary switch ~~for manual correlation~~ (added a toggle switch + timer to manually run dryer)
 * [ ] Consider ways to re-correlate after a period of time (maybe after X cycles of fanoff?)
+* [ ] Update schematics!!
 
 
 *I am using two DHT11 humidity sensors and they tend to be roughly 2 percentage points off from one another, so I do a series of tests to see what the difference is between the two then apply that value to create a correlated value to compensate for the difference.
