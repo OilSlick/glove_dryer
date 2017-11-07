@@ -5,7 +5,7 @@ This project uses an Arduino Uno to read relative humidity from two sensors; one
 1. Check relative humidity (RH) at both sensors
 2. Start a running average (RA) of the difference between the two to correlate*
 3. If the correlated values differ by >= 3%, turn on fans for 30 minutes
-4. After 30 minutes, shut down the fans and recheck humidity.
+4. Recheck humidity.
  
 ### To-Do
 * [x] ~~Switch FANCONTINUOUS to use millis instead of delay~~ (decided against FANCONTINUOUS)
