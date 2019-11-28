@@ -1,3 +1,9 @@
+/*
+ *Board: Arduino Genuino Uno
+ *Sensors: DHT11
+ *Button: Adafruit Standalone Momentary Capacitive Touch Sensor Breakout - AT42QT1010
+*/
+
 #include "DHT.h"                            //Permits DHT usage
 #include "RunningAverage.h"                 //Calculates running average for sensor correlation.
 #include <SPI.h>
@@ -24,6 +30,7 @@ char dhtGloveStatus;
 
 bool FANON = 0;                             //Track fan state
 bool DEBUG = 0;                             //Set to "1" to initiate debug routine
+bool sensorFail = 0;                        //Set to "1" if either sensor fails
 volatile unsigned long lastOnTime;          //Record the time fan turned on
 int long onDuration = (1800000);            //Time in millis to leave fan on
 
@@ -50,14 +57,48 @@ void setup()
   Serial.begin(9600);                         // start serial for output
 
   myRA.clear(); // explicitly start RA clean
+
   
   Serial.println("Beginning sensor correlation");
   correlateSensors();
-  Serial.println("Ready");
+
+    if ( dhtGlove.getStatusString() == "OK" )
+  {
+    Serial.println("glove sensor OK");
+  }
+  else 
+  {
+    sensorFail = 1;
+    Serial.println("glove sensor FAIL");
+    LEDblinkRed();
+  }
+  if ( dhtOut.getStatusString() == "OK" )
+  {
+    Serial.println("room sensor OK");
+  }
+  else 
+  {
+    sensorFail = 1;
+    Serial.println("room sensor FAIL");
+    LEDblinkRed();
+  }
+    Serial.println("Ready");
 }
  
 void loop()
 { 
+  if ( dhtGlove.getStatusString() == "TIMEOUT" )
+  {
+    sensorFail = 1;
+  }
+  if ( dhtOut.getStatusString() == "TIMEOUT" )
+  {
+    sensorFail = 1;
+  }
+  if ( sensorFail = 1 )
+  {
+    LEDfadeYellow();
+  }
   if ( digitalRead(buttonpin) == HIGH )
   {
     if ( Serial )
@@ -89,14 +130,20 @@ void loop()
   else 
   {
     analogWrite(TIP120pin, 0); // Fan off
-    LEDfadeGreen();
+    if ( sensorFail != 1 )
+    {
+      LEDfadeGreen();
+    }
 
     lastOnTime = 0;                         //Reset timer
-    readSensors();
+    if ( sensorFail != 1 )
+    {
+      readSensors();
+    }
   }
-  
+
   //Trigger events based on difference in humidity levels
-  if (humidityGLOVE >= (humidityOUTcorrelated + 3) )  
+  if ( humidityGLOVE >= (humidityOUTcorrelated + 3) && sensorFail != 1 )  
   {
     if ( Serial )
     {
@@ -105,7 +152,7 @@ void loop()
     turnfanon();
     lastOnTime = millis();
   }
-  else if ( humidityGLOVE <= (humidityOUTcorrelated + 2) && FANON == 1 && (digitalRead(buttonpin) == LOW) )
+  else if ( humidityGLOVE <= (humidityOUTcorrelated + 2) && FANON == 1 && (digitalRead(buttonpin) == LOW) && sensorFail != 1 )
   //if the two sensors are close enough, the fan is already on, and the button isn't active, turn fan off
   //if the button is on, over-ride sensors and stay on. 
   {
@@ -115,6 +162,11 @@ void loop()
     }
     turnfanoff();
     lastOnTime = 0;                         //Reset timer
+  }
+  else if ( FANON == 1 && (digitalRead(buttonpin) == LOW) && sensorFail == 1 )
+  {
+    turnfanoff();
+    lastOnTime = 0;                         //Reset timer 
   }
   else
   {
@@ -183,6 +235,8 @@ void DISPLAYSERIAL()
   {
     Serial.println("OFF");
   }
+  Serial.print("sensorFail: ");
+  Serial.println( sensorFail );
 }
 
 void correlateSensors()
@@ -231,18 +285,18 @@ void setColor(int red, int green, int blue)
 
 void LEDfadeGreen()
 {
-      //Fade green in
+      //Fade in
     for (int fadeValue = 0 ; fadeValue <= 16; fadeValue += 1) {
     // sets the value (range from 0 to 255):
-    setColor(0, fadeValue, 0);  // red
+    setColor(0, fadeValue, 0); 
     // wait for 30 milliseconds to see the dimming effect
     delay(30);
   }
 
-  //Fade green out
+  //Fade out
   for (int fadeValue = 16 ; fadeValue >= 0; fadeValue -= 1) {
     // sets the value (range from 0 to 255):
-    setColor(0, fadeValue, 0);  // red
+    setColor(0, fadeValue, 0);  
     // wait for 30 milliseconds to see the dimming effect
     delay(30);
   }
@@ -250,20 +304,38 @@ void LEDfadeGreen()
 
 void LEDfadeBlue()
 {
-      //Fade green in
+      //Fade in
     for (int fadeValue = 0 ; fadeValue <= 16; fadeValue += 1) {
     // sets the value (range from 0 to 255):
-    setColor(0, 0, fadeValue);  // red
+    setColor(0, 0, fadeValue); 
     // wait for 30 milliseconds to see the dimming effect
     delay(30);
   }
 
-  //Fade green out
+  //Fade out
   for (int fadeValue = 16 ; fadeValue >= 0; fadeValue -= 1) {
     // sets the value (range from 0 to 255):
-    setColor(0, 0, fadeValue);  // red
+    setColor(0, 0, fadeValue); 
     // wait for 30 milliseconds to see the dimming effect
     delay(30);
   }
 }
 
+void LEDfadeYellow()
+{
+      //Fade in
+    for (int fadeValue = 0 ; fadeValue <= 16; fadeValue += 1) {
+    // sets the value (range from 0 to 255):
+    setColor(fadeValue + 32, fadeValue, 0); 
+    // wait for 30 milliseconds to see the dimming effect
+    delay(30);
+  }
+
+  //Fade out
+  for (int fadeValue = 16 ; fadeValue >= 0; fadeValue -= 1) {
+    // sets the value (range from 0 to 255):
+    setColor(fadeValue, fadeValue, 0); 
+    // wait for 30 milliseconds to see the dimming effect
+    delay(30);
+  }
+}
