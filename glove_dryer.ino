@@ -1,7 +1,7 @@
 /*
  *Board: Arduino Genuino Uno
  *Sensors: DHT11
- *Button: Adafruit Standalone Momentary Capacitive Touch Sensor Breakout - AT42QT1010
+ *Button: Adafruit Standalone Toggle Capacitive Touch Sensor Breakout - AT42QT1012
 */
 
 #include "DHT.h"                            //Permits DHT usage
@@ -20,19 +20,23 @@ const int redLED = 9;
 const int greenLED = 10;
 const int blueLED = 11;
 const int buttonpin = 12;                   //Output of capacitive touch switch
+bool buttonPressed = 0;                     //track if button was pressed
 
 int humidityOUT = 0;                        //Humidity outside of glove
-int humidityOUTcorrelated = 0;              //Correlated DHT value
 int humidityGLOVE = 0;                      //Humidity inside of glove
+int humidityOUTcorrelated = 0;              //Correlated DHT value
 int humidityDIFF = 0;                       //Difference between DHT11 sensors
+int humidityBaseline = 0;                   //Used to track current humidity VS when button pushed
 char dhtOutStatus;
 char dhtGloveStatus;                        
 
 bool FANON = 0;                             //Track fan state
 bool DEBUG = 0;                             //Set to "1" to initiate debug routine
 bool sensorFail = 0;                        //Set to "1" if either sensor fails
+bool OutSensorFail = 0;                     //Set to 1 if sensor fail
+bool GloveSensorFail = 0;                   //Set to 1 if sensor fail
 volatile unsigned long lastOnTime;          //Record the time fan turned on
-int long onDuration = (1800000);            //Time in millis to leave fan on
+int long onDuration = (30000);            //Time in millis to leave fan on (1800000 = 30m)
 
 DHT dhtGlove;
 DHT dhtOut;
@@ -69,6 +73,7 @@ void setup()
   else 
   {
     sensorFail = 1;
+    GloveSensorFail = 1;
     Serial.println("glove sensor FAIL");
     LEDblinkRed();
   }
@@ -79,6 +84,7 @@ void setup()
   else 
   {
     sensorFail = 1;
+    OutSensorFail = 1;
     Serial.println("room sensor FAIL");
     LEDblinkRed();
   }
@@ -90,56 +96,89 @@ void loop()
   if ( dhtGlove.getStatusString() == "TIMEOUT" )
   {
     sensorFail = 1;
+    GloveSensorFail = 1;
   }
   if ( dhtOut.getStatusString() == "TIMEOUT" )
   {
     sensorFail = 1;
+    OutSensorFail = 1;
   }
-  if ( sensorFail = 1 )
+  if ( sensorFail == 1 && FANON == 0 )
   {
     LEDfadeYellow();
   }
-  if ( digitalRead(buttonpin) == HIGH )
+  if ( digitalRead(buttonpin) == HIGH && FANON == 0 && buttonPressed == 0 ) //detect state change
   {
+    buttonPressed = 1;
+    
     if ( Serial )
     {
       DISPLAYSERIAL();
     }
     turnfanon();
-    lastOnTime = millis(); 
+    if ( lastOnTime == 0 )
+    {
+      lastOnTime = millis();
+    }
+    if ( humidityBaseline == 0 ) 
+    {
+      humidityBaseline = humidityOUT;
+    }
   }
-  if ( DEBUG == 1)
+  if ( digitalRead(buttonpin) == LOW && buttonPressed == 1 ) //detect state change
   {
-     LEDblinkRed();
-     turnfanon();
-     delay(2000);
-     LEDblinkRed();
-     turnfanoff();
-     delay(2000);     
+    buttonPressed = 0;
+    if ( FANON == 1 )
+    {
+      turnfanoff();
+    }
   }
   if ( FANON == 1 )
   {
     LEDfadeBlue();
+    readSensors();
    if ( millis() >= (lastOnTime + onDuration) )
     {
-      //Leave fans on but reset timer and re-evaluate status
-      lastOnTime = 0;
-      readSensors();                         
+      if ( sensorFail == 0 )
+      {
+        //Leave fans on but reset timer and re-evaluate status
+        lastOnTime = millis();
+      }
+      else 
+      {
+        if ( humidityBaseline > humidityOUT ) //if the room humidity is dropping since turning on fan
+        {
+          humidityBaseline = humidityOUT;
+          lastOnTime = millis();            //extend ontime by onDuration
+          Serial.println("Resetting timer. Extending fantime");
+        }
+        else if ( humidityOUT < 60 )  //if the button pressed and AC is on (low RH) keep fan on as long as switch is on (it times out in ~60 minutes)
+        {
+          lastOnTime = millis();
+        }
+        else 
+        {
+          turnfanoff(); // Fan off
+          LEDfadeGreen();
+        }
+      }                        
     }
   }
   else 
   {
-    analogWrite(TIP120pin, 0); // Fan off
+    turnfanoff(); // Fan off
     if ( sensorFail != 1 )
     {
       LEDfadeGreen();
     }
+    if ( sensorFail == 0 )
+    {
+      LEDfadeYellow();
+    }
 
     lastOnTime = 0;                         //Reset timer
-    if ( sensorFail != 1 )
-    {
-      readSensors();
-    }
+    humidityBaseline = 0;                   //Reset baseline
+    readSensors();
   }
 
   //Trigger events based on difference in humidity levels
@@ -165,8 +204,13 @@ void loop()
   }
   else if ( FANON == 1 && (digitalRead(buttonpin) == LOW) && sensorFail == 1 )
   {
+    if ( Serial )
+    {
+      DISPLAYSERIAL();
+    }
     turnfanoff();
-    lastOnTime = 0;                         //Reset timer 
+    lastOnTime = 0;                         //Reset timer
+    humidityBaseline = 0;                   //Reset baseline
   }
   else
   {
@@ -237,6 +281,17 @@ void DISPLAYSERIAL()
   }
   Serial.print("sensorFail: ");
   Serial.println( sensorFail );
+  Serial.print("humidityBaseline: ");
+  Serial.println(humidityBaseline);
+  Serial.print("lastOnTime: ");
+  Serial.println(lastOnTime);
+  Serial.print("Current millis: ");
+  Serial.println( millis() );
+  if ( FANON == 1)
+  {
+    Serial.print("Next eval: ");
+    Serial.println( lastOnTime + onDuration );
+  }
 }
 
 void correlateSensors()
