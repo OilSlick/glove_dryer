@@ -36,7 +36,7 @@ bool sensorFail = 0;                        //Set to "1" if either sensor fails
 bool OutSensorFail = 0;                     //Set to 1 if sensor fail
 bool GloveSensorFail = 0;                   //Set to 1 if sensor fail
 volatile unsigned long lastOnTime;          //Record the time fan turned on
-int long onDuration = (30000);            //Time in millis to leave fan on (1800000 = 30m)
+int long onDuration = (1800000);            //Time in millis to leave fan on (1800000 = 30m)
 
 DHT dhtGlove;
 DHT dhtOut;
@@ -128,10 +128,10 @@ void loop()
   if ( digitalRead(buttonpin) == LOW && buttonPressed == 1 ) //detect state change
   {
     buttonPressed = 0;
-    if ( FANON == 1 )
+    /*if ( FANON == 1 )
     {
       turnfanoff();
-    }
+    } */
   }
   if ( FANON == 1 )
   {
@@ -152,7 +152,7 @@ void loop()
           lastOnTime = millis();            //extend ontime by onDuration
           Serial.println("Resetting timer. Extending fantime");
         }
-        else if ( humidityOUT < 60 )  //if the button pressed and AC is on (low RH) keep fan on as long as switch is on (it times out in ~60 minutes)
+        else if ( humidityOUT < 60 )  //if the button pressed and AC is on (low RH) keep fan on
         {
           lastOnTime = millis();
         }
@@ -171,13 +171,10 @@ void loop()
     {
       LEDfadeGreen();
     }
-    if ( sensorFail == 0 )
+    if ( sensorFail == 1 )
     {
       LEDfadeYellow();
     }
-
-    lastOnTime = 0;                         //Reset timer
-    humidityBaseline = 0;                   //Reset baseline
     readSensors();
   }
 
@@ -202,7 +199,7 @@ void loop()
     turnfanoff();
     lastOnTime = 0;                         //Reset timer
   }
-  else if ( FANON == 1 && (digitalRead(buttonpin) == LOW) && sensorFail == 1 )
+  /*else if ( FANON == 1 && (digitalRead(buttonpin) == LOW) && sensorFail == 1 )
   {
     if ( Serial )
     {
@@ -211,7 +208,7 @@ void loop()
     turnfanoff();
     lastOnTime = 0;                         //Reset timer
     humidityBaseline = 0;                   //Reset baseline
-  }
+  }*/
   else
   {
     if ( Serial )
@@ -233,6 +230,8 @@ void turnfanoff()
 {
   analogWrite(TIP120pin, 0);
   FANON = 0;
+  lastOnTime = 0;                         //Reset timer
+  humidityBaseline = 0;                   //Reset baseline
 }
 void LEDblinkRed()
 {
